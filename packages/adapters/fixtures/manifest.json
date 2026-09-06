@@ -1,0 +1,17 @@
+[
+  {
+    "name": "rust-blog",
+    "url": "https://blog.rust-lang.org/2024/09/05/Rust-1.81.0/",
+    "note": "release notes: many headings, code blocks, few images"
+  },
+  {
+    "name": "danluu",
+    "url": "https://danluu.com/percentile-latency/",
+    "note": "near-bare html, no og tags, no images"
+  },
+  {
+    "name": "simonwillison",
+    "url": "https://simonwillison.net/2024/Dec/31/llms-in-2024/",
+    "note": "long post with inline images and og metadata"
+  }
+]

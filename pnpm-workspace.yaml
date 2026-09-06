@@ -7,3 +7,6 @@ allowBuilds:
   esbuild: true
   sharp: true
   unrs-resolver: true
+
+minimumReleaseAgeExclude:
+  - isomorphic-dompurify@4.2.0

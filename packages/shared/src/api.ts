@@ -30,7 +30,7 @@ export const summaryResultSchema = z.object({
   title: z.string().min(1),
   summary_md: z.string().min(1),
   key_points: z.array(z.string().min(1)).min(1).max(8),
-  image_picks: z.array(imagePickSchema).max(3).default([]),
+  image_picks: z.array(imagePickSchema).max(3),
   read_time_min: z.number().int().nonnegative(),
 });
 export type SummaryResult = z.infer<typeof summaryResultSchema>;
