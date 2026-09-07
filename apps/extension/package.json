@@ -1,0 +1,13 @@
+{
+  "name": "@reader/extension",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "start": "web-ext run --source-dir .",
+    "build": "web-ext build --source-dir . --overwrite-dest --artifacts-dir dist",
+    "sign": "web-ext sign --source-dir . --channel unlisted --artifacts-dir dist"
+  },
+  "devDependencies": {
+    "web-ext": "^8.5.0"
+  }
+}

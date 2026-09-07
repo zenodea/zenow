@@ -1,4 +1,4 @@
-import { and, contents, desc, eq, ilike, inArray, items, jobs, lt, or, summaries, type Item } from "@reader/db";
+import { and, contents, desc, eq, inArray, items, jobs, lt, or, sql, summaries, type Item } from "@reader/db";
 import {
   canonicalizeUrl,
   detectSourceType,
@@ -72,7 +72,20 @@ export async function listItems(query: ListItemsQuery): Promise<ListItemsRespons
   const conditions = [];
 
   if (query.status) conditions.push(eq(items.status, query.status));
-  if (query.q) conditions.push(ilike(items.title, `%${query.q}%`));
+
+  // The `search` tsvector columns are added by migration 0001_search and are
+  // deliberately absent from the drizzle schema: they are large, generated,
+  // and nothing but this query ever reads them.
+  if (query.q) {
+    const match = sql`plainto_tsquery('english', ${query.q})`;
+    conditions.push(
+      or(
+        sql`items.search @@ ${match}`,
+        sql`contents.search @@ ${match}`,
+        sql`summaries.search @@ ${match}`,
+      ),
+    );
+  }
   if (query.ids !== undefined) {
     const ids = query.ids.split(",").map((id) => id.trim()).filter(Boolean);
     if (ids.length === 0) return { items: [], next_cursor: null };

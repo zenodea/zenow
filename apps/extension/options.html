@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Reader options</title>
+    <style>
+      :root { color-scheme: light dark; --accent: #ef4056; }
+      body {
+        max-width: 420px; margin: 40px auto; padding: 0 20px;
+        font: 14px/1.5 system-ui, sans-serif; background: Canvas; color: CanvasText;
+      }
+      h1 { font-size: 18px; margin-bottom: 4px; }
+      p.hint { color: GrayText; font-size: 12px; margin-top: 0; }
+      label { display: block; margin-top: 16px; font-weight: 600; font-size: 12px; }
+      input {
+        width: 100%; box-sizing: border-box; margin-top: 4px; padding: 8px;
+        border: 1px solid GrayText; border-radius: 8px; font: inherit;
+        background: Canvas; color: CanvasText;
+      }
+      button {
+        margin-top: 18px; padding: 8px 18px; border: 0; border-radius: 999px;
+        background: var(--accent); color: #fff; font: inherit; font-weight: 600; cursor: pointer;
+      }
+      #status { margin-top: 12px; font-size: 12px; color: GrayText; }
+    </style>
+  </head>
+  <body>
+    <h1>Reader</h1>
+    <p class="hint">Create a token with <code>pnpm --filter @reader/web token firefox</code>.</p>
+
+    <label for="apiBase">API address</label>
+    <input id="apiBase" type="url" placeholder="https://reader.vercel.app" />
+
+    <label for="token">Token</label>
+    <input id="token" type="password" placeholder="paste once, stored locally" />
+
+    <button id="save">Save</button>
+    <div id="status"></div>
+    <script src="options.js"></script>
+  </body>
+</html>

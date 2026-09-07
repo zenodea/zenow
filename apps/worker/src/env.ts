@@ -15,4 +15,9 @@ export const env = {
 
   openrouterApiKey: process.env.OPENROUTER_API_KEY ?? "",
   model: process.env.LLM_MODEL ?? "anthropic/claude-haiku-4.5",
+
+  // Reddit refuses unauthenticated json outright now, so these are required
+  // for reddit links rather than merely nicer.
+  redditClientId: process.env.REDDIT_CLIENT_ID ?? "",
+  redditClientSecret: process.env.REDDIT_CLIENT_SECRET ?? "",
 };

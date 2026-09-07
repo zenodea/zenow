@@ -1,5 +1,6 @@
 import { fetchContent } from "@reader/adapters";
 import { contents, eq, items, type Database, type Sql } from "@reader/db";
+import { env } from "../env.js";
 import { log } from "../logger.js";
 import { enqueue } from "../queue.js";
 import { waitForHost } from "../ratelimit.js";
@@ -20,7 +21,13 @@ export async function runFetchJob(db: Database, sql: Sql, itemId: string): Promi
   const url = new URL(item.url);
   await waitForHost(url.host);
 
-  const fetched = await fetchContent(url, { fetch, log });
+  const fetched = await fetchContent(url, {
+    fetch,
+    log,
+    ...(env.redditClientId && env.redditClientSecret
+      ? { reddit: { clientId: env.redditClientId, clientSecret: env.redditClientSecret } }
+      : {}),
+  });
 
   const row = {
     text: fetched.text,

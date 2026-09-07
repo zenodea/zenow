@@ -1,0 +1,51 @@
+{
+  "manifest_version": 3,
+  "name": "Reader",
+  "version": "1.0.0",
+  "description": "Save the current tab to your Reader list.",
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "reader@local",
+      "strict_min_version": "128.0",
+      "data_collection_permissions": {
+        "required": [
+          "browsingActivity"
+        ]
+      }
+    }
+  },
+  "permissions": [
+    "activeTab",
+    "storage",
+    "contextMenus"
+  ],
+  "optional_host_permissions": [
+    "*://*/*"
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": "icons/icon.svg",
+    "default_title": "Save to Reader"
+  },
+  "icons": {
+    "48": "icons/icon.svg",
+    "96": "icons/icon.svg"
+  },
+  "options_ui": {
+    "page": "options.html",
+    "open_in_tab": true
+  },
+  "background": {
+    "scripts": [
+      "background.js"
+    ]
+  },
+  "commands": {
+    "save-tab": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+U"
+      },
+      "description": "Save the current tab to Reader"
+    }
+  }
+}

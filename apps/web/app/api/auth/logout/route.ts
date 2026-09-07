@@ -1,6 +1,7 @@
 import { getSession } from "@/lib/session";
 
-export async function POST() {
+export async function POST(request: Request) {
   (await getSession()).destroy();
-  return Response.json({ ok: true });
+  // 303 so the browser follows with GET after the form post.
+  return Response.redirect(new URL("/login", request.url), 303);
 }

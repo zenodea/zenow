@@ -96,6 +96,12 @@ export const apiTokens = pgTable("api_tokens", {
   lastUsed: timestamp("last_used", { withTimezone: true }),
 });
 
+/**
+ * items.search, contents.search and summaries.search are generated tsvector
+ * columns created in migration 0001_search. They are left out of this schema
+ * on purpose -- they are write-only as far as the app is concerned, and
+ * selecting them would drag the whole document into every row.
+ */
 export type Item = typeof items.$inferSelect;
 export type NewItem = typeof items.$inferInsert;
 export type Content = typeof contents.$inferSelect;

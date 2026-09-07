@@ -1,0 +1,66 @@
+[
+  {
+    "kind": "Listing",
+    "data": {
+      "children": [
+        {
+          "kind": "t3",
+          "data": {
+            "title": "What is your favourite self-hosted backup setup?",
+            "selftext": "I have been running restic to B2 for two years.\n\nCurious what everyone else lands on.",
+            "author": "someuser",
+            "subreddit": "selfhosted",
+            "score": 412,
+            "num_comments": 3,
+            "created_utc": 1735689600,
+            "is_video": false,
+            "is_self": true,
+            "domain": "self.selfhosted",
+            "permalink": "/r/selfhosted/comments/1abc234/x/",
+            "post_hint": "image",
+            "url": "https://i.redd.it/backupchart.png",
+            "preview": {
+              "images": [
+                { "source": { "url": "https://preview.redd.it/chart.png?width=1200&amp;auto=webp", "width": 1200, "height": 800 } }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "kind": "Listing",
+    "data": {
+      "children": [
+        {
+          "kind": "t1",
+          "data": {
+            "body": "restic + B2 here too. The dedup is what sold me.",
+            "author": "alice",
+            "score": 88,
+            "depth": 0,
+            "replies": {
+              "data": {
+                "children": [
+                  {
+                    "kind": "t1",
+                    "data": { "body": "Same, though pruning is slow on big repos.", "author": "bob", "score": 31, "depth": 1, "replies": "" }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "kind": "t1",
+          "data": { "body": "borgmatic. Been rock solid.", "author": "carol", "score": 45, "depth": 0, "replies": "" }
+        },
+        {
+          "kind": "more",
+          "data": { "count": 120 }
+        }
+      ]
+    }
+  }
+]

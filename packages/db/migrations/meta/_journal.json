@@ -8,6 +8,13 @@
       "when": 1788859270129,
       "tag": "0000_stiff_purple_man",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1788859270130,
+      "tag": "0001_search",
+      "breakpoints": true
     }
   ]
 }

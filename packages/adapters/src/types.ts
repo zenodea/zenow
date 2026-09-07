@@ -20,6 +20,8 @@ export type FetchContext = {
   fetch: typeof fetch;
   log: Logger;
   signal?: AbortSignal;
+  /** Optional; without it the reddit adapter falls back to the public json. */
+  reddit?: { clientId: string; clientSecret: string };
 };
 
 export interface Adapter {
