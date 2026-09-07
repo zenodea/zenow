@@ -1,6 +1,7 @@
 import Link from "next/link";
-import type { ItemCard as Item } from "@reader/shared";
+import type { ItemCard as Item } from "@zenow/shared";
 import { StatusPill } from "./status-pill";
+import { TagChip } from "./tag-chip";
 
 function hostOf(url: string): string {
   try {
@@ -55,6 +56,14 @@ export function ItemCardRow({ item }: { item: Item }) {
           {item.read_time_min ? ` · ${item.read_time_min} min` : ""}
         </p>
       </Link>
+
+      {item.tags.length > 0 ? (
+        <div className="mt-2 flex flex-wrap gap-1">
+          {item.tags.map((tag) => (
+            <TagChip key={tag} tag={tag} />
+          ))}
+        </div>
+      ) : null}
     </article>
   );
 }

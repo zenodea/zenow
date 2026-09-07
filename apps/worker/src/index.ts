@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
-import { AdapterError } from "@reader/adapters";
-import { createDb } from "@reader/db";
+import { AdapterError } from "@zenow/adapters";
+import { createDb } from "@zenow/db";
 import { env } from "./env.js";
 import { runFetchJob } from "./jobs/fetch.js";
 import { runSummarizeJob } from "./jobs/summarize.js";

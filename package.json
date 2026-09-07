@@ -1,21 +1,23 @@
 {
-  "name": "reader",
+  "name": "zenow",
   "version": "0.0.0",
   "private": true,
   "type": "module",
   "packageManager": "pnpm@12.3.4",
-  "engines": { "node": ">=22" },
+  "engines": {
+    "node": ">=22"
+  },
   "scripts": {
     "build": "pnpm -r build",
     "typecheck": "pnpm -r typecheck",
     "test": "pnpm -r test",
     "lint": "pnpm -r lint",
-    "db:generate": "pnpm --filter @reader/db generate",
-    "db:migrate": "pnpm --filter @reader/db migrate",
-    "db:studio": "pnpm --filter @reader/db studio",
+    "db:generate": "pnpm --filter @zenow/db generate",
+    "db:migrate": "pnpm --filter @zenow/db migrate",
+    "db:studio": "pnpm --filter @zenow/db studio",
     "dev:db": "docker compose up -d postgres",
-    "dev:web": "pnpm --filter @reader/web dev",
-    "dev:worker": "pnpm --filter @reader/worker dev"
+    "dev:web": "pnpm --filter @zenow/web dev",
+    "dev:worker": "pnpm --filter @zenow/worker dev"
   },
   "devDependencies": {
     "typescript": "^5.9.3",

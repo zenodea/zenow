@@ -1,4 +1,4 @@
-import { youtubeVideoId } from "@reader/shared";
+import { youtubeVideoId } from "@zenow/shared";
 import { execa, ExecaError } from "execa";
 import { indexImages, isLikelyContentImage, type RawImage } from "./images.js";
 import { AdapterError, type Adapter, type FetchContext, type Fetched } from "./types.js";

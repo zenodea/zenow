@@ -1,4 +1,4 @@
-import { createDb, type Database } from "@reader/db";
+import { createDb, type Database } from "@zenow/db";
 import { env } from "./env";
 
 let instance: Database | undefined;

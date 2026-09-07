@@ -1,4 +1,4 @@
-import type { ItemStatus } from "@reader/shared";
+import type { ItemStatus } from "@zenow/shared";
 
 const LABELS: Record<ItemStatus, string> = {
   queued: "Queued",

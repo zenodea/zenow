@@ -4,6 +4,7 @@ import Markdown from "react-markdown";
 import { ItemActions } from "@/components/item-actions";
 import { OriginalContent } from "@/components/original-content";
 import { StatusPill } from "@/components/status-pill";
+import { TagChip } from "@/components/tag-chip";
 import { requireSession } from "@/lib/guard";
 import { getItemDetail } from "@/lib/items";
 
@@ -65,6 +66,14 @@ export default async function ItemPage({ params }: { params: Promise<{ id: strin
         <h1 className="mb-5 text-3xl leading-[1.2] font-bold tracking-tight text-balance sm:text-4xl">
           {item.title ?? item.url}
         </h1>
+
+        {item.tags.length > 0 ? (
+          <div className="mb-6 flex flex-wrap gap-1.5">
+            {item.tags.map((tag) => (
+              <TagChip key={tag} tag={tag} />
+            ))}
+          </div>
+        ) : null}
 
         {item.status === "done" ? null : (
           <div className="mb-6">

@@ -1,5 +1,5 @@
 {
-  "name": "@reader/web",
+  "name": "@zenow/web",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -9,11 +9,14 @@
     "start": "next start",
     "typecheck": "tsc --noEmit",
     "token": "node --env-file-if-exists=../../.env.local scripts/token.mjs",
-    "passphrase": "node scripts/passphrase.mjs"
+    "passphrase": "node scripts/passphrase.mjs",
+    "test": "echo \"no tests in @zenow/web\""
   },
   "dependencies": {
-    "@reader/db": "workspace:*",
-    "@reader/shared": "workspace:*",
+    "@neondatabase/auth": "0.5.0-beta",
+    "@neondatabase/auth-ui": "0.3.0-beta",
+    "@zenow/db": "workspace:*",
+    "@zenow/shared": "workspace:*",
     "iron-session": "^9.0.1",
     "isomorphic-dompurify": "^4.2.0",
     "next": "^16.3.4",

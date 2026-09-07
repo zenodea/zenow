@@ -1,11 +1,11 @@
-import { isRedditShareLink, redditPostId } from "@reader/shared";
+import { isRedditShareLink, redditPostId } from "@zenow/shared";
 import { fetchPage } from "./http.js";
 import { absoluteUrl, indexImages, isLikelyContentImage, type RawImage } from "./images.js";
 import { AdapterError, type Adapter, type FetchContext, type Fetched } from "./types.js";
 
 const MAX_COMMENTS = 25;
 const MAX_DEPTH = 2;
-const USER_AGENT = "web:reader:1.0 (personal reading list)";
+const USER_AGENT = "web:zenow:1.0 (personal reading list)";
 
 type RedditPost = {
   title?: string;

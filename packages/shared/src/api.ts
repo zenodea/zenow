@@ -32,6 +32,7 @@ export const summaryResultSchema = z.object({
   key_points: z.array(z.string().min(1)).min(1).max(8),
   image_picks: z.array(imagePickSchema).max(3),
   read_time_min: z.number().int().nonnegative(),
+  tags: z.array(z.string().min(1)).min(1).max(3),
 });
 export type SummaryResult = z.infer<typeof summaryResultSchema>;
 
@@ -44,6 +45,7 @@ export type SaveItemRequest = z.input<typeof saveItemRequestSchema>;
 export const listItemsQuerySchema = z.object({
   status: z.enum(itemStatuses).optional(),
   q: z.string().trim().min(1).max(200).optional(),
+  tag: z.string().trim().min(1).max(64).optional(),
   cursor: z.string().optional(),
   ids: z.string().optional(),
   limit: z.coerce.number().int().min(1).max(100).default(25),
@@ -64,6 +66,7 @@ export const itemCardSchema = z.object({
   read_time_min: z.number().nullable(),
   lead: z.string().nullable(),
   thumbnail: z.string().nullable(),
+  tags: z.array(z.string()),
 });
 export type ItemCard = z.infer<typeof itemCardSchema>;
 

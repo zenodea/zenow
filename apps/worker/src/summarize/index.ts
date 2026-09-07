@@ -1,13 +1,11 @@
-import { summaryResultSchema, type ImageRef, type SourceType, type SummaryResult } from "@reader/shared";
+import { summaryResultSchema, type ImageRef, type SourceType, type SummaryResult } from "@zenow/shared";
 import OpenAI from "openai";
 import { z } from "zod";
 import { env } from "../env.js";
+import { CHUNK_CHARS, SINGLE_PASS_CHARS, splitIntoChunks } from "./chunk.js";
 import { SYSTEM_PROMPT, buildUserMessage } from "./prompt.js";
 
-/** Rough, but only used to decide whether one pass will fit. */
-const CHARS_PER_TOKEN = 4;
-const SINGLE_PASS_CHARS = 60_000 * CHARS_PER_TOKEN;
-const CHUNK_CHARS = 40_000 * CHARS_PER_TOKEN;
+export { splitIntoChunks } from "./chunk.js";
 
 const OUTPUT_SCHEMA = z.toJSONSchema(summaryResultSchema) as Record<string, unknown>;
 
@@ -28,6 +26,8 @@ export type SummarizeInput = {
   text: string;
   images: ImageRef[];
   meta: Record<string, unknown>;
+  /** Vocabulary already in use, so the model reuses rather than reinvents. */
+  knownTags: { tag: string; uses: number }[];
 };
 
 export type SummarizeResult = SummaryResult & {
@@ -47,7 +47,7 @@ function openrouter(): OpenAI {
   client ??= new OpenAI({
     apiKey: env.openrouterApiKey,
     baseURL: "https://openrouter.ai/api/v1",
-    defaultHeaders: { "X-Title": "Reader" },
+    defaultHeaders: { "X-Title": "Zenow" },
   });
   return client;
 }
@@ -108,34 +108,6 @@ function parseJson(raw: string): unknown {
   } catch (cause) {
     throw new SummarizerError("Model did not return JSON", true, { cause });
   }
-}
-
-export function splitIntoChunks(text: string, maxChars: number): string[] {
-  const chunks: string[] = [];
-  let current = "";
-
-  for (const paragraph of text.split(/\n{2,}/)) {
-    if (paragraph.length > maxChars) {
-      if (current) {
-        chunks.push(current);
-        current = "";
-      }
-      for (let i = 0; i < paragraph.length; i += maxChars) {
-        chunks.push(paragraph.slice(i, i + maxChars));
-      }
-      continue;
-    }
-
-    if (current && current.length + paragraph.length + 2 > maxChars) {
-      chunks.push(current);
-      current = paragraph;
-    } else {
-      current = current ? `${current}\n\n${paragraph}` : paragraph;
-    }
-  }
-
-  if (current) chunks.push(current);
-  return chunks;
 }
 
 /** Long transcripts: summarize each section, then summarize the summaries. */

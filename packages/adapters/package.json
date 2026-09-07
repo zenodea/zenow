@@ -1,5 +1,5 @@
 {
-  "name": "@reader/adapters",
+  "name": "@zenow/adapters",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -23,7 +23,7 @@
   },
   "dependencies": {
     "@mozilla/readability": "^0.6.0",
-    "@reader/shared": "workspace:*",
+    "@zenow/shared": "workspace:*",
     "execa": "^9.6.0",
     "linkedom": "^0.18.12"
   },

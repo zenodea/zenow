@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { apiTokens, eq } from "@reader/db";
+import { apiTokens, eq } from "@zenow/db";
 import { db } from "./db";
 import { getSession } from "./session";
 

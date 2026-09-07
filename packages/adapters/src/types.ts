@@ -1,4 +1,4 @@
-import type { ImageRef, SourceType } from "@reader/shared";
+import type { ImageRef, SourceType } from "@zenow/shared";
 
 export type Fetched = {
   title: string;

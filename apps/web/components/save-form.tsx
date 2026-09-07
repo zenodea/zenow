@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
-import type { ItemCard } from "@reader/shared";
+import type { ItemCard } from "@zenow/shared";
 
 export function SaveForm({ onSaved }: { onSaved: (item: ItemCard) => void }) {
   const [url, setUrl] = useState("");

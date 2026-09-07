@@ -1,0 +1,29 @@
+app = "zenow-worker"
+# Same region as the Neon database (eu-west-2), so the queue poll is a
+# local round trip rather than a transatlantic one.
+primary_region = "lhr"
+
+[build]
+  dockerfile = "Dockerfile"
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  auto_stop_machines = "stop"
+  auto_start_machines = true
+  # Fly's proxy only counts http traffic, so it would happily stop a machine
+  # that is mid-job. Keeping one alive also keeps the 30s poll running, which
+  # is what makes a missed kick harmless.
+  min_machines_running = 1
+
+  [http_service.checks]
+    [http_service.checks.health]
+      path = "/health"
+      interval = "30s"
+      timeout = "5s"
+
+[[vm]]
+  cpu_kind = "shared"
+  cpus = 1
+  # 512 is enough until yt-dlp runs; ffmpeg in the image pushes it over.
+  memory_mb = 1024

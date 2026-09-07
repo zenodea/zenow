@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import type { ItemCard } from "@reader/shared";
+import type { ItemCard } from "@zenow/shared";
 import { ItemCardRow } from "./item-card";
 import { SaveForm } from "./save-form";
 

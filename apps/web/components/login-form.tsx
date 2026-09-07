@@ -5,12 +5,20 @@ import { useState, type FormEvent } from "react";
 
 export function LoginForm() {
   const router = useRouter();
-  const [passphrase, setPassphrase] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
-  async function onSubmit(event: FormEvent) {
+  async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+
+    // Read from the form, not from React state: a password manager fills the
+    // field without firing onChange, so controlled state would still be empty.
+    const passphrase = String(new FormData(event.currentTarget).get("passphrase") ?? "");
+    if (!passphrase) {
+      setError("Enter your passphrase");
+      return;
+    }
+
     setBusy(true);
     setError(null);
 
@@ -35,15 +43,15 @@ export function LoginForm() {
     <form onSubmit={onSubmit} className="space-y-3">
       <input
         type="password"
-        value={passphrase}
-        onChange={(event) => setPassphrase(event.target.value)}
+        name="passphrase"
+        autoComplete="current-password"
         placeholder="Passphrase"
         autoFocus
         className="w-full rounded-full border border-line bg-surface px-4 py-2.5 text-sm outline-none placeholder:text-muted focus:border-accent"
       />
       <button
         type="submit"
-        disabled={busy || !passphrase}
+        disabled={busy}
         className="w-full rounded-full bg-accent px-4 py-2.5 text-sm font-semibold text-white transition hover:opacity-90 disabled:opacity-40"
       >
         {busy ? "Checking..." : "Sign in"}

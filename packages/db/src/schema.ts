@@ -1,5 +1,5 @@
-import type { ImagePick, ImageRef, ItemStatus, JobKind, SourceType } from "@reader/shared";
-import { itemStatuses, jobKinds, sourceTypes } from "@reader/shared";
+import type { ImagePick, ImageRef, ItemStatus, JobKind, SourceType } from "@zenow/shared";
+import { itemStatuses, jobKinds, sourceTypes } from "@zenow/shared";
 import { sql } from "drizzle-orm";
 import {
   bigserial,
@@ -28,12 +28,14 @@ export const items = pgTable(
     status: itemStatusEnum("status").notNull().default("queued").$type<ItemStatus>(),
     error: text("error"),
     savedFrom: text("saved_from"),
+    tags: text("tags").array().notNull().default([]),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [
     index("items_feed_idx").on(t.createdAt.desc(), t.id.desc()),
     index("items_status_idx").on(t.status),
+    index("items_tags_idx").using("gin", t.tags),
   ],
 );
 

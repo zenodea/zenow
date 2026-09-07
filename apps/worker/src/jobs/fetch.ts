@@ -1,5 +1,5 @@
-import { fetchContent } from "@reader/adapters";
-import { contents, eq, items, type Database, type Sql } from "@reader/db";
+import { fetchContent } from "@zenow/adapters";
+import { contents, eq, items, type Database, type Sql } from "@zenow/db";
 import { env } from "../env.js";
 import { log } from "../logger.js";
 import { enqueue } from "../queue.js";

@@ -1,4 +1,4 @@
-import type { ImageRef, SourceType } from "@reader/shared";
+import type { ImageRef, SourceType } from "@zenow/shared";
 
 export const SYSTEM_PROMPT = `You summarize saved web content for one reader who wants the substance fast.
 
@@ -12,6 +12,17 @@ image_picks names 0-3 images worth showing: charts, diagrams, screenshots,
 product shots, photographs of the subject. Never logos, avatars, banners or
 decoration. Refer to images by the index given in the image list, and write a
 caption saying what the image shows.
+tags is 1-3 lowercase kebab-case topics used to find this again later. Fewer
+is better: one precise tag beats three vague ones. Prefer subject matter over
+format ("postgres", "rate-limiting", "hiring"). Never tag the source or medium
+("article", "video", "reddit"), and never tag something so broad it would match
+everything ("technology", "software").
+
+Reusing an existing tag is strongly preferred over coining a new one. The list
+below is the vocabulary already in use, with the number of articles carrying
+each. If an existing tag is a reasonable fit, use it exactly as written -- a
+slightly better wording is not a good enough reason to fragment the vocabulary.
+Coin a new tag only when nothing in the list covers the subject at all.
 
 Source-specific:
 - reddit: the top comments are part of the content. Say where they add to or
@@ -46,6 +57,7 @@ export function buildUserMessage(input: {
   text: string;
   images: ImageRef[];
   meta: Record<string, unknown>;
+  knownTags: { tag: string; uses: number }[];
 }): string {
   const meta = formatMeta(input.meta);
 
@@ -54,6 +66,10 @@ export function buildUserMessage(input: {
     `URL: ${input.url}`,
     input.title ? `Title as saved: ${input.title}` : "",
     meta,
+    "",
+    input.knownTags.length
+      ? `Existing tags (tag, articles using it):\n${input.knownTags.map((t) => `${t.tag} ${t.uses}`).join(", ")}`
+      : "",
     "",
     "Images:",
     formatImages(input.images),

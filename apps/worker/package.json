@@ -1,5 +1,5 @@
 {
-  "name": "@reader/worker",
+  "name": "@zenow/worker",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -11,9 +11,9 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@reader/adapters": "workspace:*",
-    "@reader/db": "workspace:*",
-    "@reader/shared": "workspace:*",
+    "@zenow/adapters": "workspace:*",
+    "@zenow/db": "workspace:*",
+    "@zenow/shared": "workspace:*",
     "openai": "^7.2.0",
     "zod": "^4.1.11"
   },

@@ -39,7 +39,7 @@ saveButton.addEventListener("click", async () => {
   const link = document.createElement("a");
   link.href = new URL(`/items/${result.id}`, result.apiBase).toString();
   link.target = "_blank";
-  link.textContent = "Open in Reader";
+  link.textContent = "Open in Zenow";
   resultEl.append(link);
 });
 

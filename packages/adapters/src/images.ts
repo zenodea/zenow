@@ -1,4 +1,4 @@
-import type { ImageRef } from "@reader/shared";
+import type { ImageRef } from "@zenow/shared";
 
 export type RawImage = { url: string; alt?: string; width?: number; height?: number };
 

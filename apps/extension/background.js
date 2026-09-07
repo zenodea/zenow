@@ -24,7 +24,7 @@ async function saveUrl(url, savedFrom) {
 
   const body = await response.json().catch(() => null);
   if (!response.ok) {
-    return { ok: false, error: body?.error ?? `Reader returned ${response.status}` };
+    return { ok: false, error: body?.error ?? `Zenow returned ${response.status}` };
   }
   return { ok: true, id: body.id, created: body.created, apiBase };
 }
@@ -57,12 +57,12 @@ browser.commands.onCommand.addListener(async (command) => {
 browser.runtime.onInstalled.addListener(() => {
   browser.contextMenus.create({
     id: "save-link",
-    title: "Save link to Reader",
+    title: "Save link to Zenow",
     contexts: ["link"],
   });
   browser.contextMenus.create({
     id: "save-page",
-    title: "Save this page to Reader",
+    title: "Save this page to Zenow",
     contexts: ["page"],
   });
 });

@@ -1,4 +1,4 @@
-import { and, contents, desc, eq, inArray, items, jobs, lt, or, sql, summaries, type Item } from "@reader/db";
+import { and, contents, desc, eq, inArray, items, jobs, lt, or, sql, summaries, type Item } from "@zenow/db";
 import {
   canonicalizeUrl,
   detectSourceType,
@@ -9,7 +9,7 @@ import {
   type ListItemsQuery,
   type ListItemsResponse,
   type SavedFrom,
-} from "@reader/shared";
+} from "@zenow/shared";
 import { db } from "./db";
 
 type CardRow = {
@@ -65,6 +65,7 @@ function toItemCard(row: CardRow): ItemCard {
     read_time_min: row.readTimeMin,
     lead: row.keyPoints?.[0] ?? null,
     thumbnail: thumbnailFor(row.imagePicks, row.contentImages),
+    tags: row.item.tags,
   };
 }
 
@@ -72,6 +73,7 @@ export async function listItems(query: ListItemsQuery): Promise<ListItemsRespons
   const conditions = [];
 
   if (query.status) conditions.push(eq(items.status, query.status));
+  if (query.tag) conditions.push(sql`${items.tags} @> ARRAY[${query.tag}]::text[]`);
 
   // The `search` tsvector columns are added by migration 0001_search and are
   // deliberately absent from the drizzle schema: they are large, generated,
@@ -215,4 +217,14 @@ export async function retryItem(id: string): Promise<Item | null> {
 export async function deleteItem(id: string): Promise<boolean> {
   const deleted = await db().delete(items).where(eq(items.id, id)).returning({ id: items.id });
   return deleted.length > 0;
+}
+
+/** Tags in use, most common first, for the filter bar. */
+export async function listTags(limit = 30): Promise<{ tag: string; count: number }[]> {
+  return db()
+    .select({ tag: sql<string>`tag`, count: sql<number>`count(*)::int` })
+    .from(sql`items, unnest(items.tags) as tag`)
+    .groupBy(sql`tag`)
+    .orderBy(desc(sql`count(*)`), sql`tag`)
+    .limit(limit);
 }

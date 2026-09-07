@@ -1,4 +1,4 @@
-import { InvalidUrlError, listItemsQuerySchema, saveItemRequestSchema } from "@reader/shared";
+import { InvalidUrlError, listItemsQuerySchema, saveItemRequestSchema } from "@zenow/shared";
 import { authenticate, badRequest, unauthorized } from "@/lib/auth";
 import { listItems, saveItem } from "@/lib/items";
 import { kickWorker } from "@/lib/worker";

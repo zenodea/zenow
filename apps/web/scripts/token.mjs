@@ -1,7 +1,7 @@
 // Mints an API token for the extension or TUI. The raw token is shown once;
-// only its sha256 is stored.  usage: pnpm --filter @reader/web token firefox
+// only its sha256 is stored.  usage: pnpm --filter @zenow/web token firefox
 import { createHash, randomBytes } from "node:crypto";
-import { apiTokens, createDb } from "@reader/db";
+import { apiTokens, createDb } from "@zenow/db";
 
 const name = process.argv[2] ?? "firefox";
 const url = process.env.DATABASE_URL;

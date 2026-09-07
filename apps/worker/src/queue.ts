@@ -1,5 +1,5 @@
-import type { JobKind } from "@reader/shared";
-import type { Sql } from "@reader/db";
+import type { JobKind } from "@zenow/shared";
+import type { Sql } from "@zenow/db";
 
 export type ClaimedJob = {
   id: number;

@@ -7,7 +7,7 @@ export type Session = { loggedIn?: true };
 function sessionOptions(): SessionOptions {
   return {
     password: env.sessionSecret,
-    cookieName: "reader_session",
+    cookieName: "zenow_session",
     cookieOptions: {
       httpOnly: true,
       sameSite: "lax",

@@ -1,5 +1,5 @@
 {
-  "name": "@reader/db",
+  "name": "@zenow/db",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -24,7 +24,7 @@
     "studio": "drizzle-kit studio"
   },
   "dependencies": {
-    "@reader/shared": "workspace:*",
+    "@zenow/shared": "workspace:*",
     "drizzle-orm": "^0.44.6",
     "postgres": "^3.4.7"
   },

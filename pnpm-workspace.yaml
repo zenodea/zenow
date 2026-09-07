@@ -4,9 +4,11 @@ packages:
 
 allowBuilds:
   "@tailwindcss/oxide": true
+  core-js: set this to true or false
   esbuild: true
   sharp: true
-  spawn-sync: set this to true or false
+  spawn-sync: false
+  core-js: false
   unrs-resolver: true
 
 minimumReleaseAgeExclude:

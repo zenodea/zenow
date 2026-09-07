@@ -1,6 +1,19 @@
-import { contents, eq, items, summaries, type Database } from "@reader/db";
+import { contents, desc, eq, items, sql, summaries, type Database } from "@zenow/db";
+import { normalizeTags } from "@zenow/shared";
 import { log } from "../logger.js";
 import { summarize } from "../summarize/index.js";
+
+const VOCABULARY_SIZE = 40;
+
+/** The tags already in use, most common first, with their usage counts. */
+async function knownTags(db: Database): Promise<{ tag: string; uses: number }[]> {
+  return db
+    .select({ tag: sql<string>`tag`, uses: sql<number>`count(*)::int` })
+    .from(sql`items, unnest(items.tags) as tag`)
+    .groupBy(sql`tag`)
+    .orderBy(desc(sql`count(*)`), sql`tag`)
+    .limit(VOCABULARY_SIZE);
+}
 
 export async function runSummarizeJob(db: Database, itemId: string): Promise<void> {
   const [row] = await db
@@ -24,6 +37,7 @@ export async function runSummarizeJob(db: Database, itemId: string): Promise<voi
     text: row.content.text,
     images: row.content.images,
     meta: row.content.meta,
+    knownTags: await knownTags(db),
   });
 
   const summary = {
@@ -42,15 +56,18 @@ export async function runSummarizeJob(db: Database, itemId: string): Promise<voi
     .values({ itemId, ...summary })
     .onConflictDoUpdate({ target: summaries.itemId, set: summary });
 
+  const tags = normalizeTags(result.tags);
+
   // The model returns the title with any site-name suffix stripped.
   await db
     .update(items)
-    .set({ title: result.title, status: "done", error: null, updatedAt: new Date() })
+    .set({ title: result.title, tags, status: "done", error: null, updatedAt: new Date() })
     .where(eq(items.id, itemId));
 
   log.info("summarized", {
     itemId,
     model: result.model,
+    tags,
     tokensIn: result.tokensIn,
     tokensOut: result.tokensOut,
   });
