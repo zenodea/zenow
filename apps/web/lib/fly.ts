@@ -15,21 +15,40 @@ export function looksLikeFlyToken(raw: string): boolean {
   return /fm2_[A-Za-z0-9+/=_-]{20,}/.test(normalizeFlyToken(raw));
 }
 
-/** Cheapest call that proves a token is live, without needing an app name. */
-export async function verifyToken(token: string): Promise<{ ok: true } | { ok: false; reason: string }> {
+/**
+ * Verifies a token against the one app it is meant to manage.
+ *
+ * This deliberately does not use an org-level endpoint. An app-scoped deploy
+ * token -- the kind worth asking anyone to hand over -- is not permitted to
+ * list an organization's apps and gets a 403 there, so checking that way
+ * rejected exactly the tokens it should have accepted.
+ */
+export async function verifyToken(
+  token: string,
+  appName: string,
+): Promise<{ ok: true } | { ok: false; reason: string }> {
+  let response: Response;
   try {
-    const response = await fetch(`${MACHINES_API}/apps?org_slug=personal`, {
+    response = await fetch(`${MACHINES_API}/apps/${encodeURIComponent(appName)}/machines`, {
       headers: { authorization: `Bearer ${token}` },
       signal: AbortSignal.timeout(20_000),
     });
-    if (response.status === 401) {
-      return { ok: false, reason: "Fly rejected that token. Check it was copied whole and has not been revoked." };
-    }
-    if (!response.ok) return { ok: false, reason: `Fly returned ${response.status} when checking the token.` };
-    return { ok: true };
   } catch {
     return { ok: false, reason: "Could not reach Fly to check the token." };
   }
+
+  if (response.ok) return { ok: true };
+
+  const reason =
+    response.status === 401
+      ? "Fly rejected that token. Re-copy it whole and check it has not been revoked."
+      : response.status === 403
+        ? `That token is not allowed to manage "${appName}". Create it for this app: fly tokens create deploy -a ${appName}`
+        : response.status === 404
+          ? `Fly has no app called "${appName}". Create it first: fly apps create ${appName}`
+          : `Fly returned ${response.status} when checking the token.`;
+
+  return { ok: false, reason };
 }
 
 export class FlyError extends Error {

@@ -54,16 +54,36 @@ export function CredentialsForm({ settings }: { settings: SettingsView }) {
       </div>
 
       <div>
+        <label htmlFor="flyAppName" className="mb-1 block text-sm font-medium">
+          Fly app name
+        </label>
+        <p className="mb-2 text-xs text-muted">
+          Create it first — a deploy token can manage machines inside an app but cannot create the
+          app:
+          <code className="mx-1 rounded bg-surface px-1 py-0.5 text-[11px]">
+            fly apps create zenow-worker-yourname
+          </code>
+        </p>
+        <input
+          id="flyAppName"
+          name="flyAppName"
+          defaultValue={settings.flyAppName ?? ""}
+          placeholder="zenow-worker-yourname"
+          className={FIELD}
+        />
+      </div>
+
+      <div>
         <label htmlFor="flyToken" className="mb-1 block text-sm font-medium">
           Fly deploy token
         </label>
         <p className="mb-2 text-xs text-muted">
-          Used to run your worker on your own Fly account. Create an{" "}
-          <strong className="font-semibold text-ink">app-scoped</strong> token, not an org-wide one:
+          Scoped to that one app, so it can never touch the rest of your account:
           <code className="mx-1 rounded bg-surface px-1 py-0.5 text-[11px]">
-            fly tokens create deploy -a your-app
+            fly tokens create deploy -a zenow-worker-yourname
           </code>
-          . {settings.flyTokenHint ? `Currently set (${settings.flyTokenHint}).` : "Not set yet."}
+          . Checked against your app when you save.{" "}
+          {settings.flyTokenHint ? `Currently set (${settings.flyTokenHint}).` : "Not set yet."}
         </p>
         <textarea
           id="flyToken"

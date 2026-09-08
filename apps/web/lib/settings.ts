@@ -38,6 +38,7 @@ export type SettingsUpdate = {
   llmKey?: string;
   llmModel?: string;
   flyToken?: string;
+  flyAppName?: string;
 };
 
 /** A blank field means "leave what is already stored" rather than "clear it". */
@@ -53,6 +54,7 @@ export async function saveSettings(tenantId: string, update: SettingsUpdate): Pr
     values.flyTokenHint = hint(update.flyToken);
   }
   if (update.llmModel) values.llmModel = update.llmModel;
+  if (update.flyAppName) values.flyAppName = update.flyAppName;
 
   const { tenantId: _ignored, ...set } = values;
   await db().insert(tenantSettings).values(values).onConflictDoUpdate({
