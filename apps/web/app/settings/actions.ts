@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { requireTenant } from "@/lib/guard";
+import { looksLikeFlyToken, normalizeFlyToken, verifyToken } from "@/lib/fly";
 import { provisionWorker, stopWorker } from "@/lib/provision";
 import { saveSettings } from "@/lib/settings";
 
@@ -11,11 +12,21 @@ export async function saveCredentials(_previous: ActionState, form: FormData): P
   const { tenantId } = await requireTenant();
 
   const llmKey = String(form.get("llmKey") ?? "").trim();
-  const flyToken = String(form.get("flyToken") ?? "").trim();
   const llmModel = String(form.get("llmModel") ?? "").trim();
+  const flyToken = normalizeFlyToken(String(form.get("flyToken") ?? ""));
 
   if (llmKey && !llmKey.startsWith("sk-or-")) {
     return { error: "That does not look like an OpenRouter key (they start sk-or-)." };
+  }
+
+  // Checked here rather than at provision time: finding out a token is wrong
+  // while pasting it is far better than finding out later from a 401.
+  if (flyToken) {
+    if (!looksLikeFlyToken(flyToken)) {
+      return { error: "That does not look like a Fly token. They contain 'fm2_' and are usually prefixed 'FlyV1 '." };
+    }
+    const check = await verifyToken(flyToken);
+    if (!check.ok) return { error: check.reason };
   }
 
   try {

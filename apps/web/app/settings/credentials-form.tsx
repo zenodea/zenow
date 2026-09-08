@@ -65,13 +65,14 @@ export function CredentialsForm({ settings }: { settings: SettingsView }) {
           </code>
           . {settings.flyTokenHint ? `Currently set (${settings.flyTokenHint}).` : "Not set yet."}
         </p>
-        <input
+        <textarea
           id="flyToken"
           name="flyToken"
-          type="password"
+          rows={3}
           autoComplete="off"
-          placeholder={settings.flyTokenHint ? "Leave blank to keep the current token" : "FlyV1 …"}
-          className={FIELD}
+          spellCheck={false}
+          placeholder={settings.flyTokenHint ? "Leave blank to keep the current token" : "FlyV1 fm2_…"}
+          className={`${FIELD} font-mono text-[11px] break-all`}
         />
       </div>
 
