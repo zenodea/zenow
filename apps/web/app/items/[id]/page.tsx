@@ -1,11 +1,12 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import Markdown from "react-markdown";
+import { Header } from "@/components/header";
 import { ItemActions } from "@/components/item-actions";
 import { OriginalContent } from "@/components/original-content";
 import { StatusPill } from "@/components/status-pill";
 import { TagChip } from "@/components/tag-chip";
-import { requireSession } from "@/lib/guard";
+import { requireTenant } from "@/lib/guard";
 import { getItemDetail } from "@/lib/items";
 
 export const dynamic = "force-dynamic";
@@ -39,26 +40,25 @@ function byline(item: Item): string[] {
 }
 
 export default async function ItemPage({ params }: { params: Promise<{ id: string }> }) {
-  await requireSession();
+  const { tenantId } = await requireTenant();
 
   const { id } = await params;
-  const item = await getItemDetail(id);
+  const item = await getItemDetail(tenantId, id);
   if (!item) notFound();
 
   const [hero, ...rest] = item.summary?.images ?? [];
 
   return (
     <>
-      <header className="sticky top-0 z-10 border-b border-line bg-paper/85 backdrop-blur">
-        <div className="mx-auto flex max-w-2xl items-center justify-between px-6 py-4">
-          <Link href="/" className="text-sm text-muted hover:text-ink">
+      <Header narrow />
+      <main className="mx-auto max-w-2xl px-6 pt-8 pb-24">
+        <div className="mb-6 flex items-center justify-between gap-4">
+          <Link href="/" className="shrink-0 text-sm text-muted hover:text-ink">
             ← My list
           </Link>
           <ItemActions id={item.id} url={item.url} />
         </div>
-      </header>
 
-      <main className="mx-auto max-w-2xl px-6 pt-10 pb-24">
         <p className="mb-3 text-[11px] tracking-[0.12em] text-muted uppercase">
           {byline(item).join("  ·  ")}
         </p>

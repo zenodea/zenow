@@ -6,12 +6,13 @@ import { kickWorker } from "@/lib/worker";
 type Context = { params: Promise<{ id: string }> };
 
 export async function POST(request: Request, { params }: Context) {
-  if (!(await authenticate(request))) return unauthorized();
+  const principal = await authenticate(request);
+  if (!principal) return unauthorized();
 
   const { id } = await params;
   if (!z.uuid().safeParse(id).success) return badRequest("Not a valid item id");
 
-  const item = await retryItem(id);
+  const item = await retryItem(principal.tenantId, id);
   if (!item) return notFound();
 
   await kickWorker();

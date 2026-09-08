@@ -12,6 +12,11 @@ import {
 } from "@zenow/shared";
 import { db } from "./db";
 
+/**
+ * tenantId is the first argument of every function here, and never optional.
+ * Forgetting it is a compile error rather than a cross-tenant read.
+ */
+
 type CardRow = {
   item: Item;
   readTimeMin: number | null;
@@ -69,8 +74,8 @@ function toItemCard(row: CardRow): ItemCard {
   };
 }
 
-export async function listItems(query: ListItemsQuery): Promise<ListItemsResponse> {
-  const conditions = [];
+export async function listItems(tenantId: string, query: ListItemsQuery): Promise<ListItemsResponse> {
+  const conditions = [eq(items.tenantId, tenantId)];
 
   if (query.status) conditions.push(eq(items.status, query.status));
   if (query.tag) conditions.push(sql`${items.tags} @> ARRAY[${query.tag}]::text[]`);
@@ -80,28 +85,28 @@ export async function listItems(query: ListItemsQuery): Promise<ListItemsRespons
   // and nothing but this query ever reads them.
   if (query.q) {
     const match = sql`plainto_tsquery('english', ${query.q})`;
-    conditions.push(
-      or(
-        sql`items.search @@ ${match}`,
-        sql`contents.search @@ ${match}`,
-        sql`summaries.search @@ ${match}`,
-      ),
+    const found = or(
+      sql`items.search @@ ${match}`,
+      sql`contents.search @@ ${match}`,
+      sql`summaries.search @@ ${match}`,
     );
+    if (found) conditions.push(found);
   }
+
   if (query.ids !== undefined) {
     const ids = query.ids.split(",").map((id) => id.trim()).filter(Boolean);
     if (ids.length === 0) return { items: [], next_cursor: null };
     conditions.push(inArray(items.id, ids));
   }
+
   if (query.cursor) {
     const cursor = decodeCursor(query.cursor);
     if (cursor) {
-      conditions.push(
-        or(
-          lt(items.createdAt, cursor.createdAt),
-          and(eq(items.createdAt, cursor.createdAt), lt(items.id, cursor.id)),
-        ),
+      const page = or(
+        lt(items.createdAt, cursor.createdAt),
+        and(eq(items.createdAt, cursor.createdAt), lt(items.id, cursor.id)),
       );
+      if (page) conditions.push(page);
     }
   }
 
@@ -110,7 +115,7 @@ export async function listItems(query: ListItemsQuery): Promise<ListItemsRespons
     .from(items)
     .leftJoin(summaries, eq(summaries.itemId, items.id))
     .leftJoin(contents, eq(contents.itemId, items.id))
-    .where(conditions.length ? and(...conditions) : undefined)
+    .where(and(...conditions))
     .orderBy(desc(items.createdAt), desc(items.id))
     .limit(query.limit + 1);
 
@@ -123,13 +128,13 @@ export async function listItems(query: ListItemsQuery): Promise<ListItemsRespons
   };
 }
 
-export async function getItemDetail(id: string): Promise<ItemDetail | null> {
+export async function getItemDetail(tenantId: string, id: string): Promise<ItemDetail | null> {
   const [row] = await db()
     .select({ item: items, summary: summaries, content: contents })
     .from(items)
     .leftJoin(summaries, eq(summaries.itemId, items.id))
     .leftJoin(contents, eq(contents.itemId, items.id))
-    .where(eq(items.id, id))
+    .where(and(eq(items.tenantId, tenantId), eq(items.id, id)))
     .limit(1);
 
   if (!row) return null;
@@ -174,56 +179,64 @@ export async function getItemDetail(id: string): Promise<ItemDetail | null> {
 }
 
 /** Insert and enqueue in one transaction so a saved item always has a job. */
-export async function saveItem(input: { url: string; savedFrom: SavedFrom }): Promise<{
-  item: Item;
-  created: boolean;
-}> {
+export async function saveItem(
+  tenantId: string,
+  input: { url: string; savedFrom: SavedFrom },
+): Promise<{ item: Item; created: boolean }> {
   const canonicalUrl = canonicalizeUrl(input.url);
   const sourceType = detectSourceType(input.url);
 
   return db().transaction(async (tx) => {
     const [inserted] = await tx
       .insert(items)
-      .values({ url: input.url.trim(), canonicalUrl, sourceType, savedFrom: input.savedFrom })
-      .onConflictDoNothing({ target: items.canonicalUrl })
+      .values({ tenantId, url: input.url.trim(), canonicalUrl, sourceType, savedFrom: input.savedFrom })
+      .onConflictDoNothing({ target: [items.tenantId, items.canonicalUrl] })
       .returning();
 
     if (!inserted) {
-      const [existing] = await tx.select().from(items).where(eq(items.canonicalUrl, canonicalUrl)).limit(1);
+      const [existing] = await tx
+        .select()
+        .from(items)
+        .where(and(eq(items.tenantId, tenantId), eq(items.canonicalUrl, canonicalUrl)))
+        .limit(1);
       if (!existing) throw new Error(`canonical_url ${canonicalUrl} conflicted but did not select`);
       return { item: existing, created: false };
     }
 
-    await tx.insert(jobs).values({ itemId: inserted.id, kind: "fetch" });
+    await tx.insert(jobs).values({ tenantId, itemId: inserted.id, kind: "fetch" });
     return { item: inserted, created: true };
   });
 }
 
-export async function retryItem(id: string): Promise<Item | null> {
+export async function retryItem(tenantId: string, id: string): Promise<Item | null> {
   return db().transaction(async (tx) => {
     const [item] = await tx
       .update(items)
       .set({ status: "queued", error: null, updatedAt: new Date() })
-      .where(eq(items.id, id))
+      .where(and(eq(items.tenantId, tenantId), eq(items.id, id)))
       .returning();
     if (!item) return null;
 
-    await tx.delete(jobs).where(eq(jobs.itemId, id));
-    await tx.insert(jobs).values({ itemId: id, kind: "fetch" });
+    await tx.delete(jobs).where(and(eq(jobs.tenantId, tenantId), eq(jobs.itemId, id)));
+    await tx.insert(jobs).values({ tenantId, itemId: id, kind: "fetch" });
     return item;
   });
 }
 
-export async function deleteItem(id: string): Promise<boolean> {
-  const deleted = await db().delete(items).where(eq(items.id, id)).returning({ id: items.id });
+export async function deleteItem(tenantId: string, id: string): Promise<boolean> {
+  const deleted = await db()
+    .delete(items)
+    .where(and(eq(items.tenantId, tenantId), eq(items.id, id)))
+    .returning({ id: items.id });
   return deleted.length > 0;
 }
 
-/** Tags in use, most common first, for the filter bar. */
-export async function listTags(limit = 30): Promise<{ tag: string; count: number }[]> {
+/** Tags in use by this tenant, most common first, for the filter bar. */
+export async function listTags(tenantId: string, limit = 30): Promise<{ tag: string; count: number }[]> {
   return db()
     .select({ tag: sql<string>`tag`, count: sql<number>`count(*)::int` })
     .from(sql`items, unnest(items.tags) as tag`)
+    .where(eq(items.tenantId, tenantId))
     .groupBy(sql`tag`)
     .orderBy(desc(sql`count(*)`), sql`tag`)
     .limit(limit);

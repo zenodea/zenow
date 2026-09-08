@@ -3,6 +3,7 @@ import type { Sql } from "@zenow/db";
 
 export type ClaimedJob = {
   id: number;
+  tenantId: string;
   itemId: string;
   kind: JobKind;
   attempts: number;
@@ -28,7 +29,7 @@ export async function claimJob(sql: Sql, workerId: string): Promise<ClaimedJob |
         limit 1
         for update skip locked
      )
-    returning id, item_id, kind, attempts, max_attempts
+    returning id, tenant_id, item_id, kind, attempts, max_attempts
   `;
 
   const row = rows[0];
@@ -36,6 +37,7 @@ export async function claimJob(sql: Sql, workerId: string): Promise<ClaimedJob |
 
   return {
     id: Number(row.id),
+    tenantId: row.tenant_id as string,
     itemId: row.item_id as string,
     kind: row.kind as JobKind,
     attempts: row.attempts as number,
@@ -92,6 +94,6 @@ export async function sweepStaleLocks(sql: Sql, olderThanMinutes: number): Promi
   return rows.length;
 }
 
-export async function enqueue(sql: Sql, itemId: string, kind: JobKind): Promise<void> {
-  await sql`insert into jobs (item_id, kind) values (${itemId}, ${kind})`;
+export async function enqueue(sql: Sql, tenantId: string, itemId: string, kind: JobKind): Promise<void> {
+  await sql`insert into jobs (tenant_id, item_id, kind) values (${tenantId}, ${itemId}, ${kind})`;
 }

@@ -1,4 +1,6 @@
 @import "tailwindcss";
+/* Neon Auth UI ships tailwind-ready styles; must come after tailwind itself. */
+@import "@neondatabase/auth/ui/tailwind";
 
 /* Semantic tokens, so dark mode is one block rather than a dark: on every element. */
 :root {

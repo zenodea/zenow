@@ -1,7 +1,6 @@
 import { summaryResultSchema, type ImageRef, type SourceType, type SummaryResult } from "@zenow/shared";
 import OpenAI from "openai";
 import { z } from "zod";
-import { env } from "../env.js";
 import { CHUNK_CHARS, SINGLE_PASS_CHARS, splitIntoChunks } from "./chunk.js";
 import { SYSTEM_PROMPT, buildUserMessage } from "./prompt.js";
 
@@ -36,28 +35,37 @@ export type SummarizeResult = SummaryResult & {
   tokensOut: number;
 };
 
+/** Whose OpenRouter account this summary is billed to. */
+export type LlmCredentials = { apiKey: string; model: string };
+
 type Usage = { tokensIn: number; tokensOut: number };
 
-let client: OpenAI | undefined;
+/** One client per key, so a shared worker does not rebuild them per job. */
+const clients = new Map<string, OpenAI>();
 
-function openrouter(): OpenAI {
-  if (!env.openrouterApiKey) {
-    throw new SummarizerError("OPENROUTER_API_KEY is not set on the worker", false);
+function openrouter(apiKey: string): OpenAI {
+  let client = clients.get(apiKey);
+  if (!client) {
+    client = new OpenAI({
+      apiKey,
+      baseURL: "https://openrouter.ai/api/v1",
+      defaultHeaders: { "X-Title": "Zenow" },
+    });
+    clients.set(apiKey, client);
   }
-  client ??= new OpenAI({
-    apiKey: env.openrouterApiKey,
-    baseURL: "https://openrouter.ai/api/v1",
-    defaultHeaders: { "X-Title": "Zenow" },
-  });
   return client;
 }
 
 /** 429 and 5xx are worth another go; a bad request or a bad key never is. */
-function classify(error: unknown): SummarizerError {
+function classify(error: unknown, model: string): SummarizerError {
   if (error instanceof OpenAI.APIError) {
     const status = error.status ?? 0;
+    // 401/402 mean the tenant's own key is wrong or out of credit: retrying
+    // will not fix either, and the message has to say which.
+    if (status === 401) return new SummarizerError("Your OpenRouter key was rejected", false, { cause: error });
+    if (status === 402) return new SummarizerError("Your OpenRouter account is out of credit", false, { cause: error });
     const retryable = status === 429 || status >= 500;
-    return new SummarizerError(`${env.model} returned ${status}: ${error.message}`, retryable, { cause: error });
+    return new SummarizerError(`${model} returned ${status}: ${error.message}`, retryable, { cause: error });
   }
   if (error instanceof OpenAI.APIConnectionError) {
     return new SummarizerError("Could not reach OpenRouter", true, { cause: error });
@@ -66,14 +74,15 @@ function classify(error: unknown): SummarizerError {
 }
 
 async function complete(
+  credentials: LlmCredentials,
   messages: OpenAI.Chat.ChatCompletionMessageParam[],
   usage: Usage,
   jsonSchema?: Record<string, unknown>,
 ): Promise<string> {
   let response: OpenAI.Chat.ChatCompletion;
   try {
-    response = await openrouter().chat.completions.create({
-      model: env.model,
+    response = await openrouter(credentials.apiKey).chat.completions.create({
+      model: credentials.model,
       max_tokens: 4000,
       messages,
       ...(jsonSchema
@@ -86,14 +95,14 @@ async function complete(
         : {}),
     });
   } catch (error) {
-    throw classify(error);
+    throw classify(error, credentials.model);
   }
 
   usage.tokensIn += response.usage?.prompt_tokens ?? 0;
   usage.tokensOut += response.usage?.completion_tokens ?? 0;
 
   const content = response.choices[0]?.message?.content?.trim();
-  if (!content) throw new SummarizerError(`${env.model} returned an empty response`, true);
+  if (!content) throw new SummarizerError(`${credentials.model} returned an empty response`, true);
   return content;
 }
 
@@ -111,12 +120,13 @@ function parseJson(raw: string): unknown {
 }
 
 /** Long transcripts: summarize each section, then summarize the summaries. */
-async function condense(text: string, usage: Usage): Promise<string> {
+async function condense(credentials: LlmCredentials, text: string, usage: Usage): Promise<string> {
   const chunks = splitIntoChunks(text, CHUNK_CHARS);
   const parts: string[] = [];
 
   for (const [index, chunk] of chunks.entries()) {
     const part = await complete(
+      credentials,
       [
         {
           role: "system",
@@ -133,18 +143,18 @@ async function condense(text: string, usage: Usage): Promise<string> {
   return parts.join("\n\n");
 }
 
-export async function summarize(input: SummarizeInput): Promise<SummarizeResult> {
+export async function summarize(input: SummarizeInput, credentials: LlmCredentials): Promise<SummarizeResult> {
   const usage: Usage = { tokensIn: 0, tokensOut: 0 };
 
   const text =
-    input.text.length > SINGLE_PASS_CHARS ? await condense(input.text, usage) : input.text;
+    input.text.length > SINGLE_PASS_CHARS ? await condense(credentials, input.text, usage) : input.text;
 
   const messages: OpenAI.Chat.ChatCompletionMessageParam[] = [
     { role: "system", content: SYSTEM_PROMPT },
     { role: "user", content: buildUserMessage({ ...input, text }) },
   ];
 
-  let raw = await complete(messages, usage, OUTPUT_SCHEMA);
+  let raw = await complete(credentials, messages, usage, OUTPUT_SCHEMA);
   let parsed = summaryResultSchema.safeParse(parseJson(raw));
 
   // One correction round for a model that honoured the shape loosely.
@@ -156,15 +166,15 @@ export async function summarize(input: SummarizeInput): Promise<SummarizeResult>
         .map((issue) => `${issue.path.join(".") || "(root)"}: ${issue.message}`)
         .join("; ")}. Return corrected JSON only.`,
     });
-    raw = await complete(messages, usage, OUTPUT_SCHEMA);
+    raw = await complete(credentials, messages, usage, OUTPUT_SCHEMA);
     parsed = summaryResultSchema.safeParse(parseJson(raw));
   }
 
   if (!parsed.success) {
-    throw new SummarizerError(`${env.model} could not produce a valid summary`, false, {
+    throw new SummarizerError(`${credentials.model} could not produce a valid summary`, false, {
       cause: parsed.error,
     });
   }
 
-  return { ...parsed.data, model: env.model, ...usage };
+  return { ...parsed.data, model: credentials.model, ...usage };
 }

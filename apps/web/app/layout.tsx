@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
+import { Providers } from "./providers";
 import "./globals.css";
 
 export const metadata: Metadata = {
   title: "Zenow",
-  description: "Saved links, read for you.",
+  description: "Save a link. Get the substance back.",
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
@@ -13,7 +14,9 @@ export default function RootLayout({ children }: { children: ReactNode }) {
   // mismatch. Suppressing here covers the attributes only, one level deep.
   return (
     <html lang="en" suppressHydrationWarning>
-      <body suppressHydrationWarning>{children}</body>
+      <body suppressHydrationWarning>
+        <Providers>{children}</Providers>
+      </body>
     </html>
   );
 }

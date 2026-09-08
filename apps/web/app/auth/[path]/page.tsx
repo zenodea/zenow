@@ -1,9 +1,8 @@
-import { redirect } from "next/navigation";
-import { LoginForm } from "@/components/login-form";
-import { getSession } from "@/lib/session";
+import { AuthView } from "@neondatabase/auth/react/ui";
 
-export default async function LoginPage() {
-  if ((await getSession()).loggedIn) redirect("/");
+/** sign-in, sign-up, forgot-password and the oauth callback all live here. */
+export default async function AuthPage({ params }: { params: Promise<{ path: string }> }) {
+  const { path } = await params;
 
   return (
     <main className="mx-auto flex min-h-dvh max-w-sm flex-col justify-center px-6">
@@ -11,7 +10,7 @@ export default async function LoginPage() {
         Zenow<span className="text-accent">.</span>
       </h1>
       <p className="mb-8 text-sm text-muted">Save a link. Get the substance back.</p>
-      <LoginForm />
+      <AuthView path={path} />
     </main>
   );
 }

@@ -9,12 +9,6 @@ export const env = {
   get databaseUrl() {
     return required("DATABASE_URL");
   },
-  get sessionSecret() {
-    return required("SESSION_SECRET");
-  },
-  get loginPassphraseHash() {
-    return required("LOGIN_PASSPHRASE_HASH");
-  },
   get workerUrl() {
     return process.env.WORKER_URL || undefined;
   },

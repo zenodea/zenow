@@ -1,4 +1,5 @@
 export * from "./client.js";
+export * from "./secrets.js";
 export * from "./schema.js";
 export {
   and,
