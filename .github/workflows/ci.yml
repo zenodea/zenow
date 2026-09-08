@@ -1,0 +1,34 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      # The apps import the packages' compiled output, so this has to run first.
+      - run: pnpm --filter "./packages/*" build
+
+      - run: pnpm -r typecheck
+      - run: pnpm -r test
+
+      # Catches manifest problems that only appear at install time, which is
+      # how the strict_min_version and data-collection issues were found.
+      - run: pnpm --filter @zenow/extension exec web-ext lint --source-dir . --self-hosted --output=text

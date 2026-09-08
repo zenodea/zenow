@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { OrganizationSwitcher, UserButton } from "@neondatabase/auth/react/ui";
+import { UserButton } from "@neondatabase/auth/react/ui";
 
 export function Header({ narrow = false }: { narrow?: boolean }) {
   return (
@@ -9,11 +9,10 @@ export function Header({ narrow = false }: { narrow?: boolean }) {
           Zenow<span className="text-accent">.</span>
         </Link>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
           <Link href="/settings" className="text-xs text-muted hover:text-ink">
             Settings
           </Link>
-          <OrganizationSwitcher size="sm" />
           <UserButton size="sm" />
         </div>
       </div>

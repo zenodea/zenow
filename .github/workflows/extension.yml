@@ -1,0 +1,85 @@
+name: Extension
+
+# Firefox will not install an unsigned extension permanently, so every release
+# is signed against your own AMO account. Unlisted signing does not put the
+# add-on in the public directory.
+on:
+  push:
+    tags: ["ext-v*"]
+  workflow_dispatch:
+
+jobs:
+  sign:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+
+      - name: Version must match the tag
+        run: |
+          manifest=$(node -p "require('./apps/extension/manifest.json').version")
+          tag="${GITHUB_REF_NAME#ext-v}"
+          if [ "$manifest" != "$tag" ]; then
+            echo "manifest.json says $manifest but the tag says $tag" >&2
+            exit 1
+          fi
+
+      - run: pnpm --filter @zenow/extension exec web-ext lint --source-dir . --self-hosted --output=text
+
+      # web-ext sign exits non-zero when AMO takes too long to return the file
+      # even though signing succeeded, so the artifact is checked for directly.
+      - name: Sign
+        continue-on-error: true
+        env:
+          AMO_JWT_ISSUER: ${{ secrets.AMO_JWT_ISSUER }}
+          AMO_JWT_SECRET: ${{ secrets.AMO_JWT_SECRET }}
+        run: |
+          pnpm --filter @zenow/extension exec web-ext sign \
+            --source-dir . --channel unlisted --artifacts-dir dist \
+            --api-key "$AMO_JWT_ISSUER" --api-secret "$AMO_JWT_SECRET"
+
+      - name: Check something was signed
+        run: ls apps/extension/dist/*.xpi
+
+      # Unlisted add-ons get nothing from AMO's update service, so Firefox is
+      # pointed at this file by update_url in the manifest. Without it an
+      # installed extension stays on whatever version it was installed with,
+      # forever.
+      - name: Build the update manifest
+        run: |
+          cd apps/extension
+          xpi=$(ls dist/*.xpi | head -1)
+          version=$(node -p "require('./manifest.json').version")
+          id=$(node -p "require('./manifest.json').browser_specific_settings.gecko.id")
+          hash="sha256:$(sha256sum "$xpi" | cut -d" " -f1)"
+          link="https://github.com/${GITHUB_REPOSITORY}/releases/download/${GITHUB_REF_NAME}/$(basename "$xpi")"
+          node -e "
+            const fs = require('node:fs');
+            fs.writeFileSync('dist/updates.json', JSON.stringify({
+              addons: {
+                [process.argv[1]]: {
+                  updates: [{ version: process.argv[2], update_link: process.argv[3], update_hash: process.argv[4] }],
+                },
+              },
+            }, null, 2));
+          " "$id" "$version" "$link" "$hash"
+          cat dist/updates.json
+
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            apps/extension/dist/*.xpi
+            apps/extension/dist/updates.json
+          body: |
+            Install: download the `.xpi`, then Firefox → `about:addons` →
+            gear icon → *Install Add-on From File*.
+
+            Once installed, Firefox updates it from `updates.json` on the
+            latest release, so later versions arrive on their own.

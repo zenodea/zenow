@@ -32,10 +32,13 @@ export async function authenticate(request: Request): Promise<Principal | null> 
   }
 
   const { data: session } = await auth.getSession();
-  const tenantId = session?.session.activeOrganizationId;
-  if (!session?.user || !tenantId) return null;
+  if (!session?.user) return null;
 
-  return { kind: "session", userId: session.user.id, tenantId };
+  // The user is the tenant. This used to read activeOrganizationId, which is
+  // now always null -- so saves were being written against an organization id
+  // while pages read them back by user id, and everything saved vanished on
+  // reload.
+  return { kind: "session", userId: session.user.id, tenantId: session.user.id };
 }
 
 export function unauthorized(): Response {

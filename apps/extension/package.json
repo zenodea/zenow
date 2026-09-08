@@ -3,9 +3,10 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "start": "web-ext run --source-dir .",
     "build": "web-ext build --source-dir . --overwrite-dest --artifacts-dir dist",
-    "sign": "web-ext sign --source-dir . --channel unlisted --artifacts-dir dist"
+    "lint": "web-ext lint --source-dir . --self-hosted --output=text",
+    "sign": "web-ext sign --source-dir . --channel unlisted --artifacts-dir dist",
+    "start": "web-ext run --source-dir ."
   },
   "devDependencies": {
     "web-ext": "^8.5.0"

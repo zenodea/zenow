@@ -1,10 +1,13 @@
 # Zenow
 
+- Web: https://zenow-chi.vercel.app
+- Worker: https://zenow-worker.fly.dev
+
 Save a link, get the substance back. A Firefox button posts the current tab to
 an API, a worker fetches and summarises it, and a web UI shows the result.
 
-Multi-tenant. A workspace is a Neon Auth organization, and every row carries
-the organization id it belongs to.
+Multi-tenant. A user is a tenant: sign in and you have a feed, which nobody
+else can see.
 
 ```
 Firefox ext ──POST /api/items──▶ Vercel (Next.js)
@@ -23,15 +26,18 @@ second worker is ever added.
 ## Tenancy
 
 Auth is [Neon Auth](https://neon.com/docs/auth/overview), a managed Better Auth
-instance that was already provisioned on the project. Its organization plugin
-gives us tenants, roles and invitations without writing an auth system: an
-organization *is* a workspace, and `session.activeOrganizationId` is the tenant
-for the request.
+instance. `tenant_id` is the signed-in user's id, so signing up is the whole of
+onboarding — there is no workspace to create and nothing to pick.
+
+Neon Auth's organization plugin is still enabled and its tables are still
+there, unused. `tenant_id` is a uuid either way, so shared feeds could arrive
+later by resolving the tenant to an organization id for users who have one,
+with no migration.
 
 `tenant_id` is `NOT NULL` on every table and denormalised onto `contents`,
 `summaries` and `jobs` even though they hang off `items`, so a row-level policy
 never needs a join to decide who owns a row. Dedup is per tenant: the same link
-saved by two workspaces is two items, not a conflict.
+saved by two people is two items, not a conflict.
 
 Every function in `apps/web/lib/items.ts` takes `tenantId` as its first
 argument, and none of them accept `undefined`. Forgetting to scope a query is a
@@ -128,7 +134,10 @@ type is a query away rather than a guess.
 
 ## Deploying
 
-**Vercel** — import the repo, root directory `apps/web`. Set `DATABASE_URL`,
+**Vercel** — root directory `apps/web`. The web app's own build script builds
+its workspace dependencies (`pnpm --filter @zenow/web^... build && next build`),
+so no custom build command is needed. Vercel Authentication has to be off, or
+the Fly worker cannot reach `/api/worker/*`. Set `DATABASE_URL`,
 `NEON_AUTH_BASE_URL`, `NEON_AUTH_COOKIE_SECRET`, `CREDENTIALS_KEY`,
 `PUBLIC_APP_URL`, `WORKER_IMAGE` and optionally `WORKER_URL` / `WORKER_SECRET`.
 

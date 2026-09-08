@@ -3,8 +3,10 @@ app = "zenow-worker"
 # local round trip rather than a transatlantic one.
 primary_region = "lhr"
 
-[build]
-  dockerfile = "Dockerfile"
+# No [build] section on purpose. A dockerfile path here would resolve against
+# this file's own directory, but the worker depends on three workspace packages
+# so the build context has to be the repo root. Deploy from the root with:
+#   fly deploy . --config apps/worker/fly.toml --dockerfile apps/worker/Dockerfile
 
 [http_service]
   internal_port = 8080
@@ -16,11 +18,13 @@ primary_region = "lhr"
   # is what makes a missed kick harmless.
   min_machines_running = 1
 
-  [http_service.checks]
-    [http_service.checks.health]
-      path = "/health"
-      interval = "30s"
-      timeout = "5s"
+  # Array of tables, not a named sub-table: flyctl rejects the latter.
+  [[http_service.checks]]
+    method = "GET"
+    path = "/health"
+    interval = "30s"
+    timeout = "5s"
+    grace_period = "10s"
 
 [[vm]]
   cpu_kind = "shared"

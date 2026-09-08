@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { z } from "zod";
 import Markdown from "react-markdown";
 import { Header } from "@/components/header";
 import { ItemActions } from "@/components/item-actions";
@@ -43,6 +44,10 @@ export default async function ItemPage({ params }: { params: Promise<{ id: strin
   const { tenantId } = await requireTenant();
 
   const { id } = await params;
+  // Postgres rejects a non-uuid outright, which surfaced as a 500 rather than
+  // the 404 that a made-up url deserves.
+  if (!z.uuid().safeParse(id).success) notFound();
+
   const item = await getItemDetail(tenantId, id);
   if (!item) notFound();
 

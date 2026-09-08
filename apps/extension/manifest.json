@@ -11,7 +11,8 @@
         "required": [
           "browsingActivity"
         ]
-      }
+      },
+      "update_url": "https://github.com/zenodea/zenow/releases/latest/download/updates.json"
     }
   },
   "permissions": [
