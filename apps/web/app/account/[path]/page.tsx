@@ -3,15 +3,18 @@ import { notFound, redirect } from "next/navigation";
 import { Header } from "@/components/header";
 import { PageTransition } from "@/components/page-transition";
 import { getSession } from "@/lib/auth/server";
+import { getReadingView } from "@/lib/settings";
 import { getThemePreference } from "@/lib/theme-server";
 import { AppearanceCard } from "./appearance-card";
 import { NameForm, PasswordForm, SignOutButton } from "./account-forms";
+import { ReadingCard } from "./reading-card";
 
 export const dynamic = "force-dynamic";
 
 const TABS = [
   { path: "settings", label: "Account" },
   { path: "security", label: "Security" },
+  { path: "customisation", label: "Customisation" },
 ] as const;
 
 /**
@@ -31,12 +34,13 @@ export default async function AccountPage({ params }: { params: Promise<{ path: 
 
   // Already read by the root layout on this same request, so this is free.
   const look = await getThemePreference();
+  const reading = path === "settings" ? await getReadingView(session.user.id) : null;
 
   return (
     <>
       <Header />
       <PageTransition>
-        <main className="mx-auto max-w-5xl px-6 py-10">
+        <main className="mx-auto max-w-5xl px-6 sm:pr-9 py-10">
           <h1 className="mb-6 text-xl font-bold tracking-tight">Account</h1>
 
           <div className="flex flex-col gap-8 sm:flex-row">
@@ -65,16 +69,17 @@ export default async function AccountPage({ params }: { params: Promise<{ path: 
                       <span className="font-medium text-ink">{session.user.email}</span>.
                     </p>
                   </section>
-
-                  <section className="rounded-xl border border-line bg-surface p-5">
-                    <h2 className="text-base font-semibold">Customisation</h2>
-                    <p className="mt-1 mb-5 text-sm text-muted">
-                      How Zenow looks while you read. Saved to your account, so it follows you to
-                      every browser you sign in from.
-                    </p>
-                    <AppearanceCard saved={look} />
-                  </section>
+                  {reading ? <ReadingCard saved={reading} /> : null}
                 </>
+              ) : path === "customisation" ? (
+                <section className="rounded-xl border border-line bg-surface p-5">
+                  <h2 className="text-base font-semibold">Customisation</h2>
+                  <p className="mt-1 mb-5 text-sm text-muted">
+                    How Zenow looks while you read. Saved to your account, so it follows you to
+                    every browser you sign in from.
+                  </p>
+                  <AppearanceCard saved={look} />
+                </section>
               ) : (
                 <>
                   <PasswordForm />

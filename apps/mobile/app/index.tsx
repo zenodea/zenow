@@ -49,6 +49,10 @@ export default function ListScreen() {
   const [search, setSearch] = useState("");
   const [tag, setTag] = useState<string | null>(null);
   const [tags, setTags] = useState<{ tag: string; count: number }[]>([]);
+  // Both start closed: everything above the first article is a reason not to
+  // read one.
+  const [searching, setSearching] = useState(false);
+  const [more, setMore] = useState(false);
 
   const [items, setItems] = useState<ItemCard[]>([]);
   const [cursor, setCursor] = useState<string | null>(null);
@@ -212,6 +216,87 @@ export default function ListScreen() {
         }}
         ListHeaderComponent={
           <View style={styles.header}>
+            <View style={styles.tabs}>
+              {TABS.map((entry, index) => (
+                <Pressable
+                  key={entry.label}
+                  onPress={() => setTab(index)}
+                  style={[styles.tab, index === tab && { backgroundColor: theme.ink }]}
+                >
+                  <Text
+                    style={{
+                      fontSize: 13,
+                      fontWeight: "600",
+                      color: index === tab ? theme.paper : theme.muted,
+                    }}
+                  >
+                    {entry.label}
+                  </Text>
+                </Pressable>
+              ))}
+
+              <View style={styles.icons}>
+                <Pressable
+                  onPress={() => setSearching((open) => !open)}
+                  hitSlop={8}
+                  style={[styles.icon, searching && { backgroundColor: theme.line }]}
+                >
+                  <Text style={{ color: theme.muted, fontSize: 14 }}>⌕</Text>
+                </Pressable>
+                <Pressable
+                  onPress={() => setMore((open) => !open)}
+                  hitSlop={8}
+                  style={[styles.icon, (more || tag) && { backgroundColor: theme.line }]}
+                >
+                  <Text style={{ color: theme.muted, fontSize: 13 }}>#</Text>
+                </Pressable>
+                <Link href="/settings" asChild>
+                  <Pressable hitSlop={8} style={[styles.icon, { borderWidth: 1, borderColor: theme.line }]}>
+                    <Text style={{ color: theme.muted, fontSize: 12 }}>•••</Text>
+                  </Pressable>
+                </Link>
+              </View>
+            </View>
+
+            {searching ? (
+              <TextInput
+                autoFocus
+                value={query}
+                onChangeText={setQuery}
+                placeholder="Search your list"
+                placeholderTextColor={theme.muted}
+                autoCapitalize="none"
+                style={[styles.search, { borderColor: theme.line, backgroundColor: theme.surface, color: theme.ink }]}
+              />
+            ) : null}
+
+            {tag && !more ? (
+              <Pressable onPress={() => setTag(null)} style={styles.showing}>
+                <Text style={{ fontSize: 12, color: theme.muted }}>Showing </Text>
+                <Text style={[styles.activeTag, { backgroundColor: theme.accent }]}>{tag} ✕</Text>
+              </Pressable>
+            ) : null}
+
+            {more && tags.length > 0 ? (
+              <View style={[styles.panel, { borderColor: theme.line, backgroundColor: theme.surface }]}>
+                {tags.slice(0, 16).map(({ tag: name, count }) => (
+                  <Pressable
+                    key={name}
+                    onPress={() => setTag(tag === name ? null : name)}
+                    style={[
+                      styles.chip,
+                      { borderColor: theme.line },
+                      tag === name && { backgroundColor: theme.accentSoft, borderColor: theme.accent },
+                    ]}
+                  >
+                    <Text style={{ fontSize: 11, color: tag === name ? theme.accent : theme.muted }}>
+                      {name} {count}
+                    </Text>
+                  </Pressable>
+                ))}
+              </View>
+            ) : null}
+
             <View style={[styles.compose, { borderColor: theme.line, backgroundColor: theme.surface }]}>
               <TextInput
                 value={draft}
@@ -237,61 +322,6 @@ export default function ListScreen() {
               </Pressable>
             </View>
 
-            <View style={styles.tabs}>
-              {TABS.map((entry, index) => (
-                <Pressable
-                  key={entry.label}
-                  onPress={() => setTab(index)}
-                  style={[styles.tab, index === tab && { backgroundColor: theme.ink }]}
-                >
-                  <Text
-                    style={{
-                      fontSize: 12,
-                      fontWeight: "600",
-                      color: index === tab ? theme.paper : theme.muted,
-                    }}
-                  >
-                    {entry.label}
-                  </Text>
-                </Pressable>
-              ))}
-
-              <Link href="/settings" asChild>
-                <Pressable style={[styles.tab, styles.settings, { borderColor: theme.line }]}>
-                  <Text style={{ fontSize: 12, fontWeight: "600", color: theme.muted }}>Account</Text>
-                </Pressable>
-              </Link>
-            </View>
-
-            <TextInput
-              value={query}
-              onChangeText={setQuery}
-              placeholder="Search your list"
-              placeholderTextColor={theme.muted}
-              autoCapitalize="none"
-              style={[styles.search, { borderColor: theme.line, backgroundColor: theme.surface, color: theme.ink }]}
-            />
-
-            {tags.length > 0 ? (
-              <View style={styles.tags}>
-                {tags.slice(0, 12).map(({ tag: name, count }) => (
-                  <Pressable
-                    key={name}
-                    onPress={() => setTag(tag === name ? null : name)}
-                    style={[
-                      styles.chip,
-                      { borderColor: theme.line },
-                      tag === name && { backgroundColor: theme.accentSoft, borderColor: theme.accent },
-                    ]}
-                  >
-                    <Text style={{ fontSize: 11, color: tag === name ? theme.accent : theme.muted }}>
-                      {name} {count}
-                    </Text>
-                  </Pressable>
-                ))}
-              </View>
-            ) : null}
-
             {error ? <Text style={[styles.error, { color: theme.accent }]}>{error}</Text> : null}
           </View>
         }
@@ -313,16 +343,27 @@ export default function ListScreen() {
 }
 
 const styles = StyleSheet.create({
-  header: { gap: 12, marginBottom: 12 },
+  header: { gap: 10, marginBottom: 14 },
+  icons: { flexDirection: "row", gap: 4, marginLeft: "auto" },
+  icon: { width: 32, height: 32, borderRadius: 16, alignItems: "center", justifyContent: "center" },
+  showing: { flexDirection: "row", alignItems: "center" },
+  activeTag: {
+    fontSize: 11,
+    color: "#fff",
+    fontWeight: "600",
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 999,
+    overflow: "hidden",
+  },
+  panel: { flexDirection: "row", flexWrap: "wrap", gap: 6, borderWidth: 1, borderRadius: 12, padding: 10 },
   compose: { flexDirection: "row", alignItems: "center", gap: 8, borderWidth: 1, borderRadius: 999, padding: 5, paddingLeft: 16 },
   composeInput: { flex: 1, fontSize: 15, paddingVertical: 8 },
   saveButton: { borderRadius: 999, paddingHorizontal: 18, paddingVertical: 9 },
   saveText: { color: "#fff", fontWeight: "700", fontSize: 13 },
   tabs: { flexDirection: "row", gap: 6, alignItems: "center" },
   tab: { paddingHorizontal: 13, paddingVertical: 7, borderRadius: 999 },
-  settings: { borderWidth: 1, marginLeft: "auto" },
   search: { borderWidth: 1, borderRadius: 999, paddingHorizontal: 16, paddingVertical: 9, fontSize: 13 },
-  tags: { flexDirection: "row", flexWrap: "wrap", gap: 6 },
   chip: { borderWidth: 1, borderRadius: 999, paddingHorizontal: 10, paddingVertical: 4 },
   error: { fontSize: 13 },
   empty: { textAlign: "center", marginTop: 64, fontSize: 14 },

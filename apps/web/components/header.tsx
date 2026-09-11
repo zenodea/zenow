@@ -23,8 +23,17 @@ export async function Header() {
     .join("");
 
   return (
-    <header className="sticky top-0 z-10 border-b border-line bg-paper/85 backdrop-blur">
-      <div className="mx-auto flex max-w-5xl items-center justify-between px-6 py-3">
+    <>
+      {/*
+        Fixed rather than sticky. Android 12 and later overscroll by stretching
+        the scrolling container, and a sticky header is inside that container --
+        so pulling past the end of a long page squashed and smeared it. A fixed
+        element hangs off the viewport instead and is left alone, which keeps
+        the stretch (and the pull-to-refresh it comes with) without deforming
+        the one thing that is meant to stay still.
+      */}
+      <header className="app-header fixed inset-x-0 top-0 z-10 border-b border-line bg-paper/85 backdrop-blur">
+      <div className="mx-auto flex h-full max-w-5xl items-center justify-between px-6">
         <Link href="/" className="text-lg font-bold tracking-tight">
           Zenow<span className="text-accent">.</span>
         </Link>
@@ -33,25 +42,29 @@ export async function Header() {
           <Link
             href="/settings"
             title="Your OpenRouter and Fly tokens"
-            className="flex items-center gap-1.5 rounded-full border border-line px-3 py-1.5 text-xs font-medium text-muted transition hover:border-ink hover:text-ink"
+            className="flex items-center gap-1.5 rounded-full border border-line px-2.5 py-1.5 text-xs font-medium text-muted transition hover:border-ink hover:text-ink sm:px-3"
           >
             <KeyIcon />
-            Tokens
+            <span className="hidden sm:inline">Tokens</span>
           </Link>
 
           <Link
             href="/account/settings"
             title={user?.email ?? "Account"}
-            className="flex items-center gap-2 rounded-full border border-line py-1 pr-3 pl-1 text-xs font-medium text-muted transition hover:border-ink hover:text-ink"
+            className="flex items-center gap-2 rounded-full border border-line p-1 text-xs font-medium text-muted transition hover:border-ink hover:text-ink sm:py-1 sm:pr-3 sm:pl-1"
           >
             <span className="flex size-6 items-center justify-center rounded-full bg-line text-[10px] font-semibold text-ink">
               {initials}
             </span>
-            {user?.name ?? "Account"}
+            <span className="hidden sm:inline">{user?.name ?? "Account"}</span>
           </Link>
         </nav>
       </div>
-    </header>
+      </header>
+
+      {/* Takes the space the fixed header no longer occupies. */}
+      <div className="app-header-spacer" aria-hidden />
+    </>
   );
 }
 

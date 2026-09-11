@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import type { ItemCard } from "@zenow/shared";
 import { ItemCardRow } from "./item-card";
 import { SaveForm } from "./save-form";
+import { Toolbar, type FeedView } from "./toolbar";
 
 const POLL_MS = 3000;
 
@@ -11,14 +12,25 @@ function isPending(item: ItemCard): boolean {
   return item.status !== "done" && item.status !== "failed";
 }
 
-export function Feed({ initial }: { initial: ItemCard[] }) {
+export function Feed({
+  initial,
+  tags,
+  view,
+  filtered,
+}: {
+  initial: ItemCard[];
+  tags: { tag: string; count: number }[];
+  view: FeedView;
+  /** Whether the emptiness could be the filter's doing rather than the list's. */
+  filtered: boolean;
+}) {
   const [items, setItems] = useState(initial);
+  // Open for someone with nothing saved, because there is nothing else for
+  // them to do; closed once the list is the point of the page, and closed for
+  // a search that found nothing -- they were not trying to save anything.
+  const [composing, setComposing] = useState(initial.length === 0 && !filtered);
 
   const pendingKey = items.filter(isPending).map((item) => item.id).join(",");
-
-  const drop = useCallback((id: string) => {
-    setItems((current) => current.filter((item) => item.id !== id));
-  }, []);
 
   const merge = useCallback((incoming: ItemCard[]) => {
     setItems((current) => {
@@ -44,18 +56,27 @@ export function Feed({ initial }: { initial: ItemCard[] }) {
 
   return (
     <>
-      <div className="mb-10">
-        <SaveForm onSaved={(item) => merge([item])} />
-      </div>
+      <Toolbar tags={tags} view={view} composing={composing} onCompose={() => setComposing((open) => !open)} />
+
+      {composing ? (
+        <div className="mb-6 rounded-xl border border-line bg-surface p-4">
+          <SaveForm
+            onSaved={(item) => {
+              merge([item]);
+              setComposing(false);
+            }}
+          />
+        </div>
+      ) : null}
 
       {items.length === 0 ? (
-        <p className="py-24 text-center text-sm text-muted">
-          Nothing saved yet. Paste a link above to get started.
+        <p className="py-20 text-center text-sm text-muted">
+          {filtered ? "Nothing matches that." : composing ? "Paste a link above to get started." : "Nothing here."}
         </p>
       ) : (
-        <div className="grid gap-x-6 gap-y-10 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-2 sm:gap-y-10 lg:grid-cols-3">
           {items.map((item) => (
-            <ItemCardRow key={item.id} item={item} onArchived={drop} />
+            <ItemCardRow key={item.id} item={item} />
           ))}
         </div>
       )}

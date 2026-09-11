@@ -62,7 +62,7 @@ export function SaveForm({ onSaved }: { onSaved: (item: ItemCard) => void }) {
               mode === option ? "bg-ink text-paper" : "text-muted hover:text-ink"
             }`}
           >
-            {option === "save" ? "Save a link" : "Research a topic"}
+            {option === "save" ? "Link" : "Research"}
           </button>
         ))}
       </div>
@@ -87,7 +87,7 @@ export function SaveForm({ onSaved }: { onSaved: (item: ItemCard) => void }) {
               spellCheck={false}
               value={url}
               onChange={(event) => setUrl(event.target.value)}
-              placeholder="Paste a link to save"
+              placeholder="Paste a link"
               className="min-w-0 flex-1 rounded-full border border-line bg-surface px-4 py-2.5 text-sm outline-none placeholder:text-muted focus:border-accent"
             />
             <button
@@ -103,24 +103,19 @@ export function SaveForm({ onSaved }: { onSaved: (item: ItemCard) => void }) {
             <textarea
               value={prompt}
               onChange={(event) => setPrompt(event.target.value)}
-              placeholder="What do you want to know? Ask at whatever length the question deserves — the agent searches the web and writes back."
+              placeholder="What do you want to know?"
               rows={3}
               required
               minLength={10}
               className="w-full resize-y rounded-2xl border border-line bg-surface px-4 py-3 text-sm outline-none placeholder:text-muted focus:border-accent"
             />
-            <div className="flex items-center gap-3">
-              <button
-                type="submit"
-                disabled={busy || prompt.trim().length < 10}
-                className="rounded-full bg-accent px-5 py-2.5 text-sm font-semibold text-white transition hover:opacity-90 disabled:opacity-40"
-              >
-                {busy ? "Starting" : "Research"}
-              </button>
-              <span className="text-xs text-muted">
-                Reads public web pages. Their content is treated as evidence, never as instructions.
-              </span>
-            </div>
+            <button
+              type="submit"
+              disabled={busy || prompt.trim().length < 10}
+              className="rounded-full bg-accent px-5 py-2.5 text-sm font-semibold text-white transition hover:opacity-90 disabled:opacity-40"
+            >
+              {busy ? "Starting" : "Research"}
+            </button>
           </div>
         )}
       </form>

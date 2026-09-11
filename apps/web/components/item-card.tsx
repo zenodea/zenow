@@ -1,10 +1,9 @@
-"use client";
-
 import Link from "next/link";
-import { useState } from "react";
 import type { ItemCard as Item, SourceType } from "@zenow/shared";
 import { StatusPill } from "./status-pill";
 import { TagChip } from "./tag-chip";
+
+const BADGES: Partial<Record<SourceType, string>> = { research: "Research", pdf: "PDF", digest: "Week" };
 
 function hostOf(url: string): string {
   try {
@@ -14,39 +13,35 @@ function hostOf(url: string): string {
   }
 }
 
-const BADGES: Partial<Record<SourceType, string>> = { research: "Research", pdf: "PDF", digest: "Week" };
-
 /** Only for the kinds you would not guess from the host. */
 export function SourceBadge({ type }: { type: SourceType }) {
   const label = BADGES[type];
   if (!label) return null;
 
   return (
-    <span className="rounded-full bg-accent px-2 py-0.5 text-[10px] font-semibold tracking-wide text-white uppercase">
+    <span className="rounded-full bg-accent px-1.5 py-0.5 text-[9px] font-semibold tracking-wide text-white uppercase">
       {label}
     </span>
   );
 }
 
-export function ItemCardRow({ item, onArchived }: { item: Item; onArchived?: (id: string) => void }) {
+/**
+ * A row on a phone and a card on anything wider. The same markup either way,
+ * because the difference is only how much room the picture deserves: on a
+ * phone a 16:9 thumbnail meant one article per screen, which is a poor way to
+ * show someone a reading list.
+ */
+export function ItemCardRow({ item }: { item: Item }) {
   const host = hostOf(item.url);
-  const [busy, setBusy] = useState(false);
-
-  async function toggleArchive() {
-    setBusy(true);
-    const response = await fetch(`/api/items/${item.id}/archive`, {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ archived: !item.archived }),
-    });
-    setBusy(false);
-    if (response.ok) onArchived?.(item.id);
-  }
 
   return (
     <article className="group">
-      <Link href={`/items/${item.id}`} transitionTypes={["nav-in"]} className="block">
-        <div className="relative mb-3 aspect-[16/9] overflow-hidden rounded-xl border border-line bg-surface">
+      <Link href={`/items/${item.id}`} transitionTypes={["nav-in"]} className="flex gap-3 sm:block">
+        {/* 16:9 on a phone too, not a square. Most thumbnails are og:image
+            banners, and cropping a 1200x630 to a square keeps the middle --
+            usually the one part with nothing in it, which reads as no picture
+            at all rather than a small one. */}
+        <div className="aspect-[16/9] w-28 shrink-0 overflow-hidden rounded-lg border border-line bg-surface sm:mb-3 sm:w-full sm:rounded-xl">
           {item.thumbnail ? (
             // Arbitrary remote hosts, so no optimizer in the path.
             <img
@@ -57,70 +52,52 @@ export function ItemCardRow({ item, onArchived }: { item: Item; onArchived?: (id
             />
           ) : (
             <div className="flex size-full items-center justify-center">
-              <span className="font-serif text-3xl text-muted/50">{host.charAt(0).toUpperCase()}</span>
-            </div>
-          )}
-
-          <div className="absolute top-2 right-2">
-            <SourceBadge type={item.source_type} />
-          </div>
-
-          {item.status === "done" ? null : (
-            <div className="absolute top-2 left-2">
-              <span className="rounded-full bg-surface/90 p-0.5 backdrop-blur">
-                <StatusPill status={item.status} />
+              <span className="font-serif text-xl text-muted/50 sm:text-3xl">
+                {host.charAt(0).toUpperCase()}
               </span>
             </div>
           )}
         </div>
 
-        <h2 className="mb-1.5 line-clamp-2 leading-snug font-semibold text-pretty group-hover:text-accent">
-          {item.read ? null : (
-            <span
-              className="mr-1.5 inline-block size-1.5 -translate-y-0.5 rounded-full bg-accent"
-              title="Unread"
-            />
-          )}
-          {item.title ?? item.url}
-        </h2>
+        <div className="min-w-0 flex-1">
+          <div className="mb-1 flex items-center gap-1.5">
+            {item.read ? null : (
+              <span className="size-1.5 shrink-0 rounded-full bg-accent" title="Unread" />
+            )}
+            <span className="truncate text-[11px] tracking-wide text-muted uppercase">
+              {item.source_type === "research" || item.source_type === "digest" ? "Zenow" : host}
+              {item.read_time_min ? ` · ${item.read_time_min} min` : ""}
+            </span>
+            <SourceBadge type={item.source_type} />
+            {item.status === "done" ? null : <StatusPill status={item.status} />}
+          </div>
 
-        {item.error ? (
-          // Red only when it has actually given up; while retrying this is
-          // progress information, not a failure.
-          <p className={`mb-2 line-clamp-2 text-sm ${item.status === "failed" ? "text-accent" : "text-muted italic"}`}>
-            {item.status === "failed" ? item.error : `Retrying — ${item.error}`}
-          </p>
-        ) : item.lead ? (
-          <p className="mb-2 line-clamp-2 text-sm text-muted">{item.lead}</p>
-        ) : null}
+          <h2 className="line-clamp-2 leading-snug font-semibold text-pretty wrap-break-word group-hover:text-accent">
+            {item.title ?? item.url}
+          </h2>
 
+          {item.error ? (
+            // Red only when it has actually given up; while retrying this is
+            // progress information, not a failure.
+            <p
+              className={`mt-1 line-clamp-2 text-sm wrap-break-word ${item.status === "failed" ? "text-accent" : "text-muted italic"}`}
+            >
+              {item.status === "failed" ? item.error : `Retrying — ${item.error}`}
+            </p>
+          ) : item.lead ? (
+            <p className="mt-1 line-clamp-2 text-sm text-muted wrap-break-word">{item.lead}</p>
+          ) : null}
+        </div>
       </Link>
-
-      <div className="flex items-baseline justify-between gap-3">
-        <p className="text-[11px] tracking-wide text-muted uppercase">
-          {item.source_type === "research" || item.source_type === "digest" ? "Zenow" : host}
-          {item.read_time_min ? ` · ${item.read_time_min} min` : ""}
-        </p>
-
-        {/* Shown on hover on a mouse, always on a touch screen, which has no
-            hover to reveal it with. */}
-        <button
-          type="button"
-          onClick={toggleArchive}
-          disabled={busy}
-          className="shrink-0 text-[11px] tracking-wide text-muted uppercase opacity-0 transition group-hover:opacity-100 focus-visible:opacity-100 hover:text-accent disabled:opacity-40 [@media(hover:none)]:opacity-100"
-        >
-          {item.archived ? "Restore" : "Archive"}
-        </button>
-      </div>
 
       {item.tags.length > 0 ? (
         <div className="mt-2 flex flex-wrap gap-1">
-          {item.tags.map((tag) => (
+          {item.tags.slice(0, 2).map((tag) => (
             <TagChip key={tag} tag={tag} />
           ))}
         </div>
       ) : null}
+
     </article>
   );
 }

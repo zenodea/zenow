@@ -28,9 +28,18 @@ export async function GET(request: Request) {
     description: "Save a link. Get the substance back.",
     start_url: "/",
     scope: "/",
-    display: "standalone",
+    // Fullscreen hides the status bar, so the page runs to the top edge of the
+    // screen and there is no strip above it wearing a colour of its own. The
+    // spec falls back down the list on its own, so a browser that will not do
+    // this gets standalone instead. The clock and the notification shade go
+    // with it -- a swipe from the top brings them back.
+    display: "fullscreen",
+    display_override: ["fullscreen", "standalone"],
     background_color: half.paper,
-    theme_color: half.accent,
+    // The bar above the app -- the status bar on Android -- takes this. It is
+    // the page behind the content, not the accent: a red strip above a cream
+    // page reads as a different app wearing a hat.
+    theme_color: half.paper,
     orientation: "portrait-primary",
     icons: [
       { src: icon("size=192"), sizes: "192x192", type: "image/png" },

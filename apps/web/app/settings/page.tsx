@@ -15,7 +15,7 @@ export default async function SettingsPage() {
   return (
     <>
       <Header />
-      <main className="mx-auto max-w-5xl space-y-12 px-6 py-10">
+      <main className="mx-auto max-w-5xl space-y-12 px-6 sm:pr-9 py-10">
         <section>
           <h1 className="mb-1 text-xl font-bold tracking-tight">Settings</h1>
           <p className="text-sm text-muted">Your feed is yours alone. Nobody else can see it.</p>

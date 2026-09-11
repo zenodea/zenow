@@ -1,5 +1,12 @@
 import { decryptSecret, encryptSecret, eq, hint, tenantSettings, type TenantSettings } from "@zenow/db";
-import { defaultTheme, defaultThemeMode, type Theme, type ThemeMode } from "@zenow/shared";
+import {
+  defaultReadingView,
+  defaultTheme,
+  defaultThemeMode,
+  type ReadingView,
+  type Theme,
+  type ThemeMode,
+} from "@zenow/shared";
 import { db } from "./db";
 
 /** Everything the settings page is allowed to know. No ciphertext leaves here. */
@@ -48,6 +55,7 @@ export type SettingsUpdate = {
   flyAppName?: string;
   theme?: Theme;
   themeMode?: ThemeMode;
+  readingView?: ReadingView;
 };
 
 /** A blank field means "leave what is already stored" rather than "clear it". */
@@ -66,12 +74,23 @@ export async function saveSettings(tenantId: string, update: SettingsUpdate): Pr
   if (update.flyAppName) values.flyAppName = update.flyAppName;
   if (update.theme) values.theme = update.theme;
   if (update.themeMode) values.themeMode = update.themeMode;
+  if (update.readingView) values.readingView = update.readingView;
 
   const { tenantId: _ignored, ...set } = values;
   await db().insert(tenantSettings).values(values).onConflictDoUpdate({
     target: tenantSettings.tenantId,
     set,
   });
+}
+
+export async function getReadingView(tenantId: string): Promise<ReadingView> {
+  const [row] = await db()
+    .select({ readingView: tenantSettings.readingView })
+    .from(tenantSettings)
+    .where(eq(tenantSettings.tenantId, tenantId))
+    .limit(1);
+
+  return row?.readingView ?? defaultReadingView;
 }
 
 /** Server-side only: used when running this tenant's jobs. */

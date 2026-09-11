@@ -85,6 +85,13 @@
       "when": 1788940510954,
       "tag": "0011_kind_thunderbolt_ross",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1789149714491,
+      "tag": "0012_parched_demogoblin",
+      "breakpoints": true
     }
   ]
 }

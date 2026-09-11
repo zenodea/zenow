@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { isTheme, isThemeMode } from "@zenow/shared";
+import { isReadingView, isTheme, isThemeMode } from "@zenow/shared";
 import { requireTenant } from "@/lib/guard";
 import { saveSettings } from "@/lib/settings";
 
@@ -35,4 +35,22 @@ export async function saveAppearance(
   // The look lives on <html> in the root layout, so every page carries it.
   revalidatePath("/", "layout");
   return { ok: "Saved." };
+}
+
+export type ReadingState = { error?: string };
+
+export async function saveReadingView(_previous: ReadingState, form: FormData): Promise<ReadingState> {
+  const { tenantId } = await requireTenant();
+
+  const readingView = form.get("readingView");
+  if (!isReadingView(readingView)) return { error: "Pick summary or original." };
+
+  try {
+    await saveSettings(tenantId, { readingView });
+  } catch (error) {
+    return { error: error instanceof Error ? error.message : "Could not save" };
+  }
+
+  revalidatePath("/items/[id]", "page");
+  return {};
 }

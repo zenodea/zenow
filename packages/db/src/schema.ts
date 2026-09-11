@@ -1,5 +1,5 @@
-import type { ImagePick, ImageRef, ItemStatus, JobKind, SourceType, Theme, ThemeMode } from "@zenow/shared";
-import { itemStatuses, jobKinds, sourceTypes, themeModes, themes } from "@zenow/shared";
+import type { ImagePick, ImageRef, ItemStatus, JobKind, ReadingView, SourceType, Theme, ThemeMode } from "@zenow/shared";
+import { itemStatuses, jobKinds, readingViews, sourceTypes, themeModes, themes } from "@zenow/shared";
 import { sql } from "drizzle-orm";
 import {
   bigserial,
@@ -19,6 +19,7 @@ export const sourceTypeEnum = pgEnum("source_type", sourceTypes);
 export const jobKindEnum = pgEnum("job_kind", jobKinds);
 export const themeEnum = pgEnum("theme", themes);
 export const themeModeEnum = pgEnum("theme_mode", themeModes);
+export const readingViewEnum = pgEnum("reading_view", readingViews);
 export const workerStatusEnum = pgEnum("worker_status", [
   "none",
   "provisioning",
@@ -158,6 +159,7 @@ export const tenantSettings = pgTable("tenant_settings", {
 
   theme: themeEnum("theme").notNull().default("base").$type<Theme>(),
   themeMode: themeModeEnum("theme_mode").notNull().default("system").$type<ThemeMode>(),
+  readingView: readingViewEnum("reading_view").notNull().default("summary").$type<ReadingView>(),
 
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),

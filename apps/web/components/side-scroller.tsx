@@ -200,7 +200,7 @@ export function SideScroller() {
       onPointerDown={jump}
       onPointerEnter={() => setHovered(true)}
       onPointerLeave={() => setHovered(false)}
-      className="group fixed right-1.5 z-20 w-3 touch-none select-none transition-opacity duration-200 data-[scrollable=false]:pointer-events-none data-[scrollable=false]:opacity-0 pointer-coarse:pointer-events-none"
+      className="group fixed right-1.5 z-20 w-3 touch-none select-none transition-opacity duration-200 data-[scrollable=false]:pointer-events-none data-[scrollable=false]:opacity-0 pointer-coarse:hidden"
       style={{ bottom: GAP }}
     >
       <div
