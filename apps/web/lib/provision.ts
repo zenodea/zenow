@@ -3,10 +3,20 @@ import { eq, tenantSettings } from "@zenow/db";
 import { db } from "./db";
 import { createApp, createMachine, destroyMachine, FlyError, listMachines, waitForStarted } from "./fly";
 import { getFlyToken, getLlmKey } from "./settings";
+import { kickSecret } from "./worker";
 import { hashWorkerToken } from "./worker-auth";
 
 const MACHINE_NAME = "zenow-worker";
 const MEMORY_MB = 1024;
+
+/**
+ * How long a tenant's machine sits idle before stopping itself. Fly bills a
+ * running machine and next to nothing for a stopped one, and saving a link
+ * starts it again through the proxy -- so the only thing this costs is a few
+ * seconds on the first save after a quiet spell, in an app whose whole premise
+ * is that you save now and read later.
+ */
+const IDLE_EXIT_MINUTES = 5;
 
 function config() {
   const image = process.env.WORKER_IMAGE;
@@ -97,8 +107,10 @@ export async function provisionWorker(tenantId: string, appName: string): Promis
       env: {
         ZENOW_API_URL: apiUrl,
         ZENOW_WORKER_TOKEN: workerToken,
+        WORKER_SECRET: kickSecret(tenantId),
         OPENROUTER_API_KEY: llm.key,
         LLM_MODEL: llm.model,
+        IDLE_EXIT_MINUTES: String(IDLE_EXIT_MINUTES),
         PORT: "8080",
       },
     });

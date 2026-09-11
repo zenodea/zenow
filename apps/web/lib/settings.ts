@@ -1,4 +1,5 @@
 import { decryptSecret, encryptSecret, eq, hint, tenantSettings, type TenantSettings } from "@zenow/db";
+import { defaultTheme, defaultThemeMode, type Theme, type ThemeMode } from "@zenow/shared";
 import { db } from "./db";
 
 /** Everything the settings page is allowed to know. No ciphertext leaves here. */
@@ -9,6 +10,8 @@ export type SettingsView = {
   flyAppName: string | null;
   workerStatus: TenantSettings["workerStatus"];
   workerError: string | null;
+  theme: Theme;
+  themeMode: ThemeMode;
 };
 
 const DEFAULTS: SettingsView = {
@@ -18,6 +21,8 @@ const DEFAULTS: SettingsView = {
   flyAppName: null,
   workerStatus: "none",
   workerError: null,
+  theme: defaultTheme,
+  themeMode: defaultThemeMode,
 };
 
 export async function getSettings(tenantId: string): Promise<SettingsView> {
@@ -31,6 +36,8 @@ export async function getSettings(tenantId: string): Promise<SettingsView> {
     flyAppName: row.flyAppName,
     workerStatus: row.workerStatus,
     workerError: row.workerError,
+    theme: row.theme,
+    themeMode: row.themeMode,
   };
 }
 
@@ -39,6 +46,8 @@ export type SettingsUpdate = {
   llmModel?: string;
   flyToken?: string;
   flyAppName?: string;
+  theme?: Theme;
+  themeMode?: ThemeMode;
 };
 
 /** A blank field means "leave what is already stored" rather than "clear it". */
@@ -55,6 +64,8 @@ export async function saveSettings(tenantId: string, update: SettingsUpdate): Pr
   }
   if (update.llmModel) values.llmModel = update.llmModel;
   if (update.flyAppName) values.flyAppName = update.flyAppName;
+  if (update.theme) values.theme = update.theme;
+  if (update.themeMode) values.themeMode = update.themeMode;
 
   const { tenantId: _ignored, ...set } = values;
   await db().insert(tenantSettings).values(values).onConflictDoUpdate({

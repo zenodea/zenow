@@ -15,7 +15,7 @@ export async function POST(request: Request) {
       url: parsed.data.url,
       savedFrom: parsed.data.saved_from,
     });
-    if (created) await kickWorker();
+    if (created) await kickWorker(principal.tenantId);
     return Response.json({ id: item.id, status: item.status, created }, { status: created ? 201 : 200 });
   } catch (error) {
     if (error instanceof InvalidUrlError) return badRequest(error.message);

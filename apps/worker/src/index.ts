@@ -22,6 +22,20 @@ const workerId = `${process.env.FLY_MACHINE_ID ?? "local"}-${randomUUID().slice(
 let running = true;
 let wake: (() => void) | null = null;
 
+/**
+ * Stopping when there is nothing to do is the point of a per-tenant machine:
+ * Fly bills for a running one and next to nothing for a stopped one, and the
+ * proxy starts it again on the next request to /kick. Exiting zero is what
+ * makes it stop rather than restart, so the machine's restart policy must not
+ * be "always".
+ *
+ * Work in flight always wins -- the timer only ever sees a drain that claimed
+ * nothing.
+ */
+function sleepNow(idleSince: number): boolean {
+  return env.idleExitMs > 0 && Date.now() - idleSince >= env.idleExitMs;
+}
+
 function sleepUntilKick(ms: number): Promise<void> {
   return new Promise((resolve) => {
     const finish = () => {
@@ -50,11 +64,19 @@ async function main(): Promise<void> {
 
   // A remote worker holds no database credential: it asks the api for work.
   if (env.mode === "remote") {
+    let idleSince = Date.now();
+
     while (running) {
       try {
-        await drainRemote();
+        if ((await drainRemote()) > 0) idleSince = Date.now();
       } catch (error) {
         log.error("loop error", { error: errorMessage(error) });
+        idleSince = Date.now();
+      }
+
+      if (sleepNow(idleSince)) {
+        log.info("idle, stopping", { minutes: env.idleExitMs / 60_000 });
+        break;
       }
       if (running) await sleepUntilKick(env.pollIntervalMs);
     }
@@ -85,13 +107,15 @@ async function main(): Promise<void> {
     }
   }
 
-  async function drain(): Promise<void> {
+  async function drain(): Promise<number> {
     const inFlight = new Set<Promise<void>>();
+    let ran = 0;
 
     while (running) {
       while (running && inFlight.size < env.concurrency) {
         const job = await claimJob(sql, workerId);
         if (!job) break;
+        ran += 1;
 
         const task = runJob(job).catch((error) => {
           log.error("job handler crashed", { jobId: job.id, error: errorMessage(error) });
@@ -105,7 +129,10 @@ async function main(): Promise<void> {
     }
 
     await Promise.all(inFlight);
+    return ran;
   }
+
+  let idleSince = Date.now();
 
   while (running) {
     try {
@@ -114,9 +141,15 @@ async function main(): Promise<void> {
 
       const requeued = await requeueStrandedItems(sql);
       if (requeued > 0) log.warn("requeued stranded items", { count: requeued });
-      await drain();
+      if ((await drain()) > 0) idleSince = Date.now();
     } catch (error) {
       log.error("loop error", { error: errorMessage(error) });
+      idleSince = Date.now();
+    }
+
+    if (sleepNow(idleSince)) {
+      log.info("idle, stopping", { minutes: env.idleExitMs / 60_000 });
+      break;
     }
     if (running) await sleepUntilKick(env.pollIntervalMs);
   }

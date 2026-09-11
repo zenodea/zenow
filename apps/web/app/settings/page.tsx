@@ -43,7 +43,8 @@ export default async function SettingsPage() {
           <h2 className="mb-1 text-base font-semibold">Your worker</h2>
           <p className="mb-4 text-sm text-muted">
             Optional. Fetching and summarising runs on your own Fly account, so the compute is yours
-            and nothing of yours queues behind anyone else.
+            and nothing of yours queues behind anyone else. It stops itself after five idle minutes
+            and starts again on your next save — a sleeping machine costs nothing.
           </p>
           <WorkerCard settings={settings} />
         </section>

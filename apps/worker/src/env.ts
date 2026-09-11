@@ -22,6 +22,13 @@ export const env = {
   port: Number(process.env.PORT ?? 8080),
   concurrency: Number(process.env.CONCURRENCY ?? 3),
   pollIntervalMs: Number(process.env.POLL_INTERVAL_MS ?? 30_000),
+
+  /**
+   * Minutes of nothing to do before the worker stops itself. Zero means never,
+   * which is what the shared worker wants -- it is the backstop that drains
+   * every tenant's queue, so it is the one machine that has to stay up.
+   */
+  idleExitMs: Number(process.env.IDLE_EXIT_MINUTES ?? 0) * 60_000,
   staleLockMinutes: Number(process.env.STALE_LOCK_MINUTES ?? 10),
 
   openrouterApiKey: optional("OPENROUTER_API_KEY"),

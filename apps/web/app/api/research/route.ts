@@ -13,7 +13,7 @@ export async function POST(request: Request) {
   }
 
   const item = await startResearch(principal.tenantId, parsed.data.prompt);
-  await kickWorker();
+  await kickWorker(principal.tenantId);
 
   return Response.json({ id: item.id, status: item.status, created: true }, { status: 201 });
 }

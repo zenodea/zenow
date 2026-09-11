@@ -1,5 +1,5 @@
-import type { ImagePick, ImageRef, ItemStatus, JobKind, SourceType } from "@zenow/shared";
-import { itemStatuses, jobKinds, sourceTypes } from "@zenow/shared";
+import type { ImagePick, ImageRef, ItemStatus, JobKind, SourceType, Theme, ThemeMode } from "@zenow/shared";
+import { itemStatuses, jobKinds, sourceTypes, themeModes, themes } from "@zenow/shared";
 import { sql } from "drizzle-orm";
 import {
   bigserial,
@@ -17,6 +17,8 @@ import {
 export const itemStatusEnum = pgEnum("item_status", itemStatuses);
 export const sourceTypeEnum = pgEnum("source_type", sourceTypes);
 export const jobKindEnum = pgEnum("job_kind", jobKinds);
+export const themeEnum = pgEnum("theme", themes);
+export const themeModeEnum = pgEnum("theme_mode", themeModes);
 export const workerStatusEnum = pgEnum("worker_status", [
   "none",
   "provisioning",
@@ -153,6 +155,9 @@ export const tenantSettings = pgTable("tenant_settings", {
   workerTokenHash: text("worker_token_hash"),
   workerStatus: workerStatusEnum("worker_status").notNull().default("none"),
   workerError: text("worker_error"),
+
+  theme: themeEnum("theme").notNull().default("base").$type<Theme>(),
+  themeMode: themeModeEnum("theme_mode").notNull().default("system").$type<ThemeMode>(),
 
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),

@@ -145,17 +145,26 @@ export function createMachine(
     guest: { cpu_kind: "shared", cpus: 1, memory_mb: options.memoryMb },
     // The worker serves /health and /kick; exposing it lets Fly health-check
     // the machine and lets the api wake it the moment something is saved.
+    //
+    // autostart is what makes a stopped machine come back: the proxy boots it
+    // on the next request rather than refusing one. autostop stays off because
+    // the proxy only counts http traffic, and this machine's work is a queue --
+    // it would be stopped mid-job. The worker decides when it is idle.
     services: [
       {
         protocol: "tcp",
         internal_port: 8080,
+        autostart: true,
+        autostop: "off",
         ports: [
           { port: 80, handlers: ["http"] },
           { port: 443, handlers: ["tls", "http"] },
         ],
       },
     ],
-    restart: { policy: "always" },
+    // Not "always": the worker stops itself by exiting zero when it has been
+    // idle, and "always" would restart it straight back into an empty queue.
+    restart: { policy: "on-failure" },
   };
 
   return call<Machine>(token, `/apps/${encodeURIComponent(app)}/machines`, {

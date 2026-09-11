@@ -7,7 +7,7 @@ import type { SettingsView } from "@/lib/settings";
 const STATUS: Record<SettingsView["workerStatus"], { label: string; className: string }> = {
   none: { label: "Not provisioned", className: "bg-line/70 text-muted" },
   provisioning: { label: "Provisioning", className: "bg-line/70 text-muted" },
-  running: { label: "Running", className: "bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300" },
+  running: { label: "Ready", className: "bg-ok-soft text-ok" },
   stopped: { label: "Stopped", className: "bg-line/70 text-muted" },
   error: { label: "Error", className: "bg-accent-soft text-accent" },
 };

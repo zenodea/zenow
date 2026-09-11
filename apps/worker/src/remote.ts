@@ -107,13 +107,16 @@ async function runJob(job: WorkerJob): Promise<void> {
 }
 
 /** Claims up to `concurrency` jobs at a time until the queue comes back empty. */
-export async function drainRemote(): Promise<void> {
+/** Returns how many jobs it ran, which is what the idle timer watches. */
+export async function drainRemote(): Promise<number> {
   const inFlight = new Set<Promise<void>>();
+  let ran = 0;
 
   while (true) {
     while (inFlight.size < env.concurrency) {
       const job = await claim();
       if (!job) break;
+      ran += 1;
 
       const task = runJob(job).catch((error) => {
         log.error("job handler crashed", { error: errorMessage(error) });
@@ -127,4 +130,5 @@ export async function drainRemote(): Promise<void> {
   }
 
   await Promise.all(inFlight);
+  return ran;
 }

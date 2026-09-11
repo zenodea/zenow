@@ -190,6 +190,33 @@ summarize job, store the file, and play it instead. The reason not to do that
 yet is that it needs object storage, a per-article cost on every summary
 whether or not anyone listens, and a cache to make the second play free.
 
+## Workers that sleep
+
+A tenant's machine stops itself after five idle minutes, and Fly bills next to
+nothing for a stopped machine. Saving a link starts it again: the api posts to
+`/kick`, the request goes through Fly's proxy, and the proxy boots the machine
+to serve it. So the cost of a per-tenant worker is the work it does, not the
+day it sat waiting.
+
+Three details make that safe:
+
+- The machine stops by **exiting zero**, so its restart policy is `on-failure`
+  rather than `always`. `always` would put it straight back into an empty
+  queue.
+- The service is `autostart: true`, `autostop: "off"`. The proxy may start it
+  and may never stop it: the proxy counts http traffic, and this machine's work
+  is a queue, so it would be stopped mid-job. The worker decides when it is
+  idle, and only ever after a drain that claimed nothing.
+- Nothing depends on a kick arriving. The **shared worker claims any tenant's
+  jobs** straight from Postgres, so a sleeping machine cannot strand work --
+  the worst case is that a job waits for the shared worker's next poll instead
+  of the tenant's own machine. That is also why the shared worker is the one
+  that stays up: `IDLE_EXIT_MINUTES` defaults to zero, meaning never.
+
+`/kick` is authenticated with a secret derived from `CREDENTIALS_KEY` and the
+tenant id, so there is no third credential to store -- and an open `/kick` on a
+machine that starts on request is a way to run up someone else's Fly bill.
+
 ## Choosing a model
 
 `LLM_MODEL` is any OpenRouter slug, so comparing costs nothing but a restart:

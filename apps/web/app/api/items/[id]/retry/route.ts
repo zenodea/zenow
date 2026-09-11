@@ -15,6 +15,6 @@ export async function POST(request: Request, { params }: Context) {
   const item = await retryItem(principal.tenantId, id);
   if (!item) return notFound();
 
-  await kickWorker();
+  await kickWorker(principal.tenantId);
   return Response.json({ id: item.id, status: item.status, created: false });
 }

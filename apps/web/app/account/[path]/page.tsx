@@ -3,6 +3,8 @@ import { notFound, redirect } from "next/navigation";
 import { Header } from "@/components/header";
 import { PageTransition } from "@/components/page-transition";
 import { getSession } from "@/lib/auth/server";
+import { getThemePreference } from "@/lib/theme-server";
+import { AppearanceCard } from "./appearance-card";
 import { NameForm, PasswordForm, SignOutButton } from "./account-forms";
 
 export const dynamic = "force-dynamic";
@@ -26,6 +28,9 @@ export default async function AccountPage({ params }: { params: Promise<{ path: 
 
   const { path } = await params;
   if (!TABS.some((tab) => tab.path === path)) notFound();
+
+  // Already read by the root layout on this same request, so this is free.
+  const look = await getThemePreference();
 
   return (
     <>
@@ -59,6 +64,15 @@ export default async function AccountPage({ params }: { params: Promise<{ path: 
                       You sign in as{" "}
                       <span className="font-medium text-ink">{session.user.email}</span>.
                     </p>
+                  </section>
+
+                  <section className="rounded-xl border border-line bg-surface p-5">
+                    <h2 className="text-base font-semibold">Customisation</h2>
+                    <p className="mt-1 mb-5 text-sm text-muted">
+                      How Zenow looks while you read. Saved to your account, so it follows you to
+                      every browser you sign in from.
+                    </p>
+                    <AppearanceCard saved={look} />
                   </section>
                 </>
               ) : (
