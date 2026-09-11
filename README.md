@@ -13,8 +13,6 @@ Save a link. Get the substance back.
 
 </div>
 
-![The reading list](.github/assets/screenshots/list.png)
-
 ## The idea
 
 Save a link from the browser, your phone or the extension. Zenow reads the page, writes a
@@ -24,8 +22,6 @@ Reddit threads, YouTube videos and PDFs all work.
 The list opens on what you have not read yet. When that is empty it shows everything.
 
 ## Reading
-
-<img src=".github/assets/screenshots/article.png" alt="An article with its summary">
 
 Each article opens on the summary: key points first, then a few paragraphs. One tap
 switches to the original page, cleaned up and in the same reading font. If you would rather
@@ -54,11 +50,6 @@ was about anything at all.
   writes up what it found.
 
 ## Mobile
-
-<p>
-  <img src=".github/assets/screenshots/mobile-list.png" alt="The list on a phone" width="270">
-  <img src=".github/assets/screenshots/mobile-article.png" alt="An article on a phone" width="270">
-</p>
 
 The web app works on a phone and installs like an app. Pages you have opened stay readable
 without a connection.
