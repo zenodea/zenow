@@ -21,7 +21,7 @@
     "contextMenus"
   ],
   "optional_host_permissions": [
-    "*://*/*"
+    "https://news.zenodea.com/*"
   ],
   "action": {
     "default_popup": "popup.html",

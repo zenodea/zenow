@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { auth } from "./auth/server";
+import { getSession } from "./auth/server";
 
 export type Principal = {
   userId: string;
@@ -16,7 +16,7 @@ export type Principal = {
  * migration: tenantId would become the organization id for users who have one.
  */
 export async function requireTenant(): Promise<Principal> {
-  const { data: session } = await auth.getSession();
+  const { data: session } = await getSession();
   if (!session?.user) redirect("/auth/sign-in");
 
   return { userId: session.user.id, tenantId: session.user.id };

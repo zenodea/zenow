@@ -2,11 +2,19 @@ import { randomUUID } from "node:crypto";
 import { createDb } from "@zenow/db";
 import { assertConfigured, env } from "./env.js";
 import { runFetchJob } from "./jobs/fetch.js";
+import { runResearchJob } from "./jobs/research.js";
 import { runSummarizeJob } from "./jobs/summarize.js";
 import { errorMessage, log } from "./logger.js";
 import { drainRemote } from "./remote.js";
 import { isRetryable } from "./retry.js";
-import { claimJob, completeJob, failJob, sweepStaleLocks, type ClaimedJob } from "./queue.js";
+import {
+  claimJob,
+  completeJob,
+  failJob,
+  requeueStrandedItems,
+  sweepStaleLocks,
+  type ClaimedJob,
+} from "./queue.js";
 import { startServer } from "./server.js";
 
 const workerId = `${process.env.FLY_MACHINE_ID ?? "local"}-${randomUUID().slice(0, 8)}`;
@@ -60,6 +68,7 @@ async function main(): Promise<void> {
   async function runJob(job: ClaimedJob): Promise<void> {
     try {
       if (job.kind === "fetch") await runFetchJob(db, sql, job.tenantId, job.itemId);
+      else if (job.kind === "research") await runResearchJob(db, sql, job.tenantId, job.itemId);
       else await runSummarizeJob(db, job.tenantId, job.itemId);
       await completeJob(sql, job.id);
     } catch (error) {
@@ -102,6 +111,9 @@ async function main(): Promise<void> {
     try {
       const released = await sweepStaleLocks(sql, env.staleLockMinutes);
       if (released > 0) log.warn("released stale locks", { count: released });
+
+      const requeued = await requeueStrandedItems(sql);
+      if (requeued > 0) log.warn("requeued stranded items", { count: requeued });
       await drain();
     } catch (error) {
       log.error("loop error", { error: errorMessage(error) });

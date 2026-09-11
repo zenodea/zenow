@@ -38,14 +38,26 @@ export const items = pgTable(
     error: text("error"),
     savedFrom: text("saved_from"),
     tags: text("tags").array().notNull().default([]),
+    /** Set the first time the reading view is opened. */
+    readAt: timestamp("read_at", { withTimezone: true }),
+    /** Dealt with, but kept. The feed hides these; the archive shows them. */
+    archivedAt: timestamp("archived_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [
     // The same link saved by two tenants is two items, not a conflict.
     unique("items_tenant_canonical_key").on(t.tenantId, t.canonicalUrl),
-    index("items_feed_idx").on(t.tenantId, t.createdAt.desc(), t.id.desc()),
+    index("items_feed_idx")
+      .on(t.tenantId, t.createdAt.desc(), t.id.desc())
+      .where(sql`${t.archivedAt} is null`),
+    index("items_archive_idx")
+      .on(t.tenantId, t.archivedAt.desc())
+      .where(sql`${t.archivedAt} is not null`),
     index("items_status_idx").on(t.tenantId, t.status),
+    index("items_unread_idx")
+      .on(t.tenantId, t.createdAt.desc())
+      .where(sql`${t.readAt} is null`),
     index("items_tags_idx").using("gin", t.tags),
   ],
 );
@@ -130,7 +142,7 @@ export const tenantSettings = pgTable("tenant_settings", {
 
   llmKeyEncrypted: text("llm_key_encrypted"),
   llmKeyHint: text("llm_key_hint"),
-  llmModel: text("llm_model").notNull().default("anthropic/claude-haiku-4.5"),
+  llmModel: text("llm_model").notNull().default("openai/gpt-5.6-luna"),
 
   flyTokenEncrypted: text("fly_token_encrypted"),
   flyTokenHint: text("fly_token_hint"),

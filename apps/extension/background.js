@@ -1,32 +1,28 @@
-const SETTINGS = { apiBase: "", token: "" };
-
-async function readSettings() {
-  return browser.storage.local.get(SETTINGS);
-}
+const API_BASE = "https://news.zenodea.com";
 
 /** Single place that talks to the API, so popup, shortcut and menu agree. */
 async function saveUrl(url, savedFrom) {
-  const { apiBase, token } = await readSettings();
-  if (!apiBase || !token) {
-    return { ok: false, error: "Set the API address and token in the extension options first." };
+  const { token } = await browser.storage.local.get({ token: "" });
+  if (!token) {
+    return { ok: false, error: "Paste a token in the extension options first." };
   }
 
   let response;
   try {
-    response = await fetch(new URL("/api/items", apiBase).toString(), {
+    response = await fetch(`${API_BASE}/api/items`, {
       method: "POST",
       headers: { "content-type": "application/json", authorization: `Bearer ${token}` },
       body: JSON.stringify({ url, saved_from: savedFrom }),
     });
   } catch {
-    return { ok: false, error: `Could not reach ${apiBase}` };
+    return { ok: false, error: `Could not reach ${API_BASE}` };
   }
 
   const body = await response.json().catch(() => null);
   if (!response.ok) {
     return { ok: false, error: body?.error ?? `Zenow returned ${response.status}` };
   }
-  return { ok: true, id: body.id, created: body.created, apiBase };
+  return { ok: true, id: body.id, created: body.created, apiBase: API_BASE };
 }
 
 /** The popup may already be closed, so feedback goes on the toolbar icon. */

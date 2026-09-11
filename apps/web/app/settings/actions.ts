@@ -5,6 +5,7 @@ import { requireTenant } from "@/lib/guard";
 import { looksLikeFlyToken, normalizeFlyToken, verifyToken } from "@/lib/fly";
 import { provisionWorker, stopWorker } from "@/lib/provision";
 import { getSettings, saveSettings } from "@/lib/settings";
+import { createToken, revokeToken } from "@/lib/tokens";
 
 export type ActionState = { ok?: string; error?: string };
 
@@ -19,6 +20,8 @@ export async function saveCredentials(_previous: ActionState, form: FormData): P
   if (llmKey && !llmKey.startsWith("sk-or-")) {
     return { error: "That does not look like an OpenRouter key (they start sk-or-)." };
   }
+
+  let createdApp = false;
 
   if (flyAppName && !/^[a-z0-9][a-z0-9-]{1,62}$/.test(flyAppName)) {
     return { error: "A Fly app name is lowercase letters, digits and dashes." };
@@ -36,6 +39,7 @@ export async function saveCredentials(_previous: ActionState, form: FormData): P
     }
     const check = await verifyToken(flyToken, flyAppName);
     if (!check.ok) return { error: check.reason };
+    createdApp = check.created;
   }
 
   try {
@@ -50,7 +54,7 @@ export async function saveCredentials(_previous: ActionState, form: FormData): P
   }
 
   revalidatePath("/settings");
-  return { ok: "Saved." };
+  return { ok: createdApp ? `Saved, and created the Fly app "${flyAppName}".` : "Saved." };
 }
 
 // The app name comes from what was saved, not the form, so the token it was
@@ -76,5 +80,40 @@ export async function provision(_previous: ActionState, _form: FormData): Promis
 export async function stop(): Promise<void> {
   const { tenantId } = await requireTenant();
   await stopWorker(tenantId);
+  revalidatePath("/settings");
+}
+
+export type TokenActionState = ActionState & { raw?: string; name?: string };
+
+/**
+ * The raw token is returned to the caller once and never stored, so this is
+ * the only moment it can be shown. It rides back in the action state rather
+ * than the page, which means a reload cannot resurrect it.
+ */
+export async function mintToken(
+  _previous: TokenActionState,
+  form: FormData,
+): Promise<TokenActionState> {
+  const { tenantId } = await requireTenant();
+  const name = String(form.get("name") ?? "").trim() || "firefox";
+
+  if (name.length > 40) {
+    return { error: "Keep the name under 40 characters." };
+  }
+
+  try {
+    const { raw, token } = await createToken(tenantId, name);
+    revalidatePath("/settings");
+    return { ok: `Token "${token.name}" created.`, raw, name: token.name };
+  } catch (error) {
+    return { error: error instanceof Error ? error.message : "Could not create the token" };
+  }
+}
+
+export async function revoke(form: FormData): Promise<void> {
+  const { tenantId } = await requireTenant();
+  const id = String(form.get("id") ?? "");
+
+  if (id) await revokeToken(tenantId, id);
   revalidatePath("/settings");
 }

@@ -42,6 +42,50 @@
   color-scheme: light dark;
 }
 
+/* Going deeper pushes in; coming back pulls out. Fast enough to read as a
+   change of place, not slow enough to wait for. */
+@keyframes zenow-in-old {
+  to { opacity: 0; transform: scale(1.02); }
+}
+@keyframes zenow-in-new {
+  from { opacity: 0; transform: scale(0.97); }
+}
+@keyframes zenow-out-old {
+  to { opacity: 0; transform: scale(0.97); }
+}
+@keyframes zenow-out-new {
+  from { opacity: 0; transform: scale(1.02); }
+}
+
+::view-transition-old(.nav-in) { animation: 130ms ease-in both zenow-in-old; }
+::view-transition-new(.nav-in) { animation: 190ms ease-out both zenow-in-new; }
+::view-transition-old(.nav-out) { animation: 130ms ease-in both zenow-out-old; }
+::view-transition-new(.nav-out) { animation: 190ms ease-out both zenow-out-new; }
+
+/* Both sides paint at once, so neither leaves a white gap behind it. */
+::view-transition-group(.nav-in),
+::view-transition-group(.nav-out) {
+  isolation: auto;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(.nav-in), ::view-transition-new(.nav-in),
+  ::view-transition-old(.nav-out), ::view-transition-new(.nav-out) {
+    animation: none;
+  }
+}
+
+/* Selection, caret and native control accents all use the brand colour. */
+::selection {
+  background-color: color-mix(in srgb, var(--accent) 30%, transparent);
+  color: var(--ink);
+}
+
+:root {
+  accent-color: var(--accent);
+  caret-color: var(--accent);
+}
+
 body {
   background-color: var(--paper);
   color: var(--ink);
@@ -123,4 +167,23 @@ body {
   border: 0;
   padding: 0;
   font-size: inherit;
+}
+
+/* The native scrollbar is glued to the edge of the window: full height, so it
+   runs alongside the header, and outside the page's own margins. Firefox and
+   Chrome both draw it over that strip whenever you scroll or move the pointer
+   near the edge. <SideScroller> draws its own inside the content area instead.
+
+   The attribute comes from <html> in the root layout, so this holds from the
+   first paint. body is covered too: which element the viewport takes its
+   scrollbar styling from depends on where overflow ends up, and it costs
+   nothing to answer for both. */
+html[data-side-scroller],
+html[data-side-scroller] body {
+  scrollbar-width: none;
+}
+html[data-side-scroller]::-webkit-scrollbar,
+html[data-side-scroller] body::-webkit-scrollbar {
+  width: 0;
+  height: 0;
 }

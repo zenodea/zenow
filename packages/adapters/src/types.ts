@@ -8,6 +8,8 @@ export type Fetched = {
   html?: string;
   images: ImageRef[];
   meta: Record<string, unknown>;
+  /** Set when the bytes disagree with what the url suggested. */
+  sourceType?: SourceType;
 };
 
 export type Logger = {
@@ -22,6 +24,8 @@ export type FetchContext = {
   signal?: AbortSignal;
   /** Optional; without it the reddit adapter falls back to the public json. */
   reddit?: { clientId: string; clientSecret: string };
+  /** Path to a cookies.txt. YouTube refuses datacenter IPs without one. */
+  youtubeCookiesPath?: string;
 };
 
 export interface Adapter {

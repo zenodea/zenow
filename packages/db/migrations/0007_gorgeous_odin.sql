@@ -1,0 +1,1 @@
+ALTER TABLE "tenant_settings" ALTER COLUMN "llm_model" SET DEFAULT 'openai/gpt-5.6-luna';

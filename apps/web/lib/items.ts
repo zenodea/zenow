@@ -1,4 +1,4 @@
-import { and, contents, desc, eq, inArray, items, jobs, lt, or, sql, summaries, type Item } from "@zenow/db";
+import { and, contents, desc, eq, inArray, isNotNull, isNull, items, jobs, lt, or, sql, summaries, type Item } from "@zenow/db";
 import {
   canonicalizeUrl,
   detectSourceType,
@@ -71,13 +71,20 @@ function toItemCard(row: CardRow): ItemCard {
     lead: row.keyPoints?.[0] ?? null,
     thumbnail: thumbnailFor(row.imagePicks, row.contentImages),
     tags: row.item.tags,
+    read: row.item.readAt !== null,
+    archived: row.item.archivedAt !== null,
   };
 }
 
 export async function listItems(tenantId: string, query: ListItemsQuery): Promise<ListItemsResponse> {
   const conditions = [eq(items.tenantId, tenantId)];
 
+  // The archive is a separate view, not a filter on top of the feed: nothing
+  // archived shows up anywhere else.
+  conditions.push(query.archived ? isNotNull(items.archivedAt) : isNull(items.archivedAt));
+
   if (query.status) conditions.push(eq(items.status, query.status));
+  if (query.unread) conditions.push(isNull(items.readAt));
   if (query.tag) conditions.push(sql`${items.tags} @> ARRAY[${query.tag}]::text[]`);
 
   // The `search` tsvector columns are added by migration 0001_search and are
@@ -208,6 +215,31 @@ export async function saveItem(
   });
 }
 
+/**
+ * A research item has no url of its own. It gets a zenow: one, unique per
+ * item so the per-tenant unique index still means something, and never
+ * fetched -- the research job reads the prompt from the title.
+ */
+export async function startResearch(tenantId: string, prompt: string): Promise<Item> {
+  return db().transaction(async (tx) => {
+    const [item] = await tx
+      .insert(items)
+      .values({
+        tenantId,
+        url: `zenow:research/${crypto.randomUUID()}`,
+        canonicalUrl: `zenow:research/${crypto.randomUUID()}`,
+        sourceType: "research",
+        title: prompt,
+        savedFrom: "web",
+      })
+      .returning();
+    if (!item) throw new Error("could not create the research item");
+
+    await tx.insert(jobs).values({ tenantId, itemId: item.id, kind: "research" });
+    return item;
+  });
+}
+
 export async function retryItem(tenantId: string, id: string): Promise<Item | null> {
   return db().transaction(async (tx) => {
     const [item] = await tx
@@ -218,7 +250,13 @@ export async function retryItem(tenantId: string, id: string): Promise<Item | nu
     if (!item) return null;
 
     await tx.delete(jobs).where(and(eq(jobs.tenantId, tenantId), eq(jobs.itemId, id)));
-    await tx.insert(jobs).values({ tenantId, itemId: id, kind: "fetch" });
+    // Re-running a research item means researching again, not fetching a url
+    // it does not have.
+    await tx.insert(jobs).values({
+      tenantId,
+      itemId: id,
+      kind: item.sourceType === "research" ? "research" : "fetch",
+    });
     return item;
   });
 }
@@ -240,4 +278,22 @@ export async function listTags(tenantId: string, limit = 30): Promise<{ tag: str
     .groupBy(sql`tag`)
     .orderBy(desc(sql`count(*)`), sql`tag`)
     .limit(limit);
+}
+
+/** Archiving keeps the item and its summary; only the feed stops showing it. */
+export async function setArchived(tenantId: string, id: string, archived: boolean): Promise<boolean> {
+  const updated = await db()
+    .update(items)
+    .set({ archivedAt: archived ? new Date() : null, updatedAt: new Date() })
+    .where(and(eq(items.tenantId, tenantId), eq(items.id, id)))
+    .returning({ id: items.id });
+  return updated.length > 0;
+}
+
+/** Idempotent: the first open is the one that counts. */
+export async function markRead(tenantId: string, id: string): Promise<void> {
+  await db()
+    .update(items)
+    .set({ readAt: new Date() })
+    .where(and(eq(items.tenantId, tenantId), eq(items.id, id), isNull(items.readAt)));
 }

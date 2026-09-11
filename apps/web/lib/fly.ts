@@ -26,7 +26,8 @@ export function looksLikeFlyToken(raw: string): boolean {
 export async function verifyToken(
   token: string,
   appName: string,
-): Promise<{ ok: true } | { ok: false; reason: string }> {
+  orgSlug = "personal",
+): Promise<{ ok: true; created: boolean } | { ok: false; reason: string }> {
   let response: Response;
   try {
     response = await fetch(`${MACHINES_API}/apps/${encodeURIComponent(appName)}/machines`, {
@@ -37,16 +38,27 @@ export async function verifyToken(
     return { ok: false, reason: "Could not reach Fly to check the token." };
   }
 
-  if (response.ok) return { ok: true };
+  if (response.ok) return { ok: true, created: false };
+
+  if (response.status === 404) {
+    // The app does not exist. Make it, if this token is allowed to.
+    const outcome = await createApp(token, appName, orgSlug).catch(() => "forbidden" as const);
+    if (outcome === "created") return { ok: true, created: true };
+    return {
+      ok: false,
+      reason:
+        `Fly has no app called "${appName}", and this token cannot create one — app-scoped deploy ` +
+        `tokens can only manage an app that already exists. Either create it yourself with ` +
+        `"fly apps create ${appName}", or paste an org-scoped token and Zenow will create it for you.`,
+    };
+  }
 
   const reason =
     response.status === 401
       ? "Fly rejected that token. Re-copy it whole and check it has not been revoked."
       : response.status === 403
         ? `That token is not allowed to manage "${appName}". Create it for this app: fly tokens create deploy -a ${appName}`
-        : response.status === 404
-          ? `Fly has no app called "${appName}". Create it first: fly apps create ${appName}`
-          : `Fly returned ${response.status} when checking the token.`;
+        : `Fly returned ${response.status} when checking the token.`;
 
   return { ok: false, reason };
 }
@@ -92,6 +104,24 @@ async function call<T>(token: string, path: string, init: RequestInit = {}): Pro
     throw new FlyError(response.status, detail);
   }
   return (text ? JSON.parse(text) : {}) as T;
+}
+
+/**
+ * Creating an app needs organization-level permission. An app-scoped deploy
+ * token cannot do it -- it is scoped to an app that must already exist -- so
+ * this is attempted and allowed to fail, rather than required.
+ */
+export async function createApp(token: string, app: string, orgSlug: string): Promise<"created" | "forbidden"> {
+  try {
+    await call(token, "/apps", {
+      method: "POST",
+      body: JSON.stringify({ app_name: app, org_slug: orgSlug }),
+    });
+    return "created";
+  } catch (error) {
+    if (error instanceof FlyError && (error.status === 403 || error.status === 401)) return "forbidden";
+    throw error;
+  }
 }
 
 export function listMachines(token: string, app: string): Promise<Machine[]> {

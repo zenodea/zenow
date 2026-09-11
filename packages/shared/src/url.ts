@@ -1,4 +1,4 @@
-export const sourceTypes = ["article", "reddit", "youtube"] as const;
+export const sourceTypes = ["article", "reddit", "youtube", "research", "pdf", "digest"] as const;
 export type SourceType = (typeof sourceTypes)[number];
 
 export class InvalidUrlError extends Error {
@@ -99,9 +99,25 @@ export function isRedditShareLink(input: string | URL): boolean {
   return segs[0] === "r" && segs[2] === "s" && Boolean(segs[3]);
 }
 
+/**
+ * Guessed from the url alone, so it can be wrong: a link with no .pdf on it
+ * that serves one is corrected by the adapter once the bytes arrive.
+ */
+export function isPdfUrl(input: string | URL): boolean {
+  let url: URL;
+  try {
+    url = toUrl(input);
+  } catch {
+    return false;
+  }
+  if (/\.pdf$/i.test(url.pathname)) return true;
+  return bareHost(url) === "arxiv.org" && url.pathname.startsWith("/pdf/");
+}
+
 export function detectSourceType(input: string | URL): SourceType {
   if (youtubeVideoId(input)) return "youtube";
   if (redditPostId(input) || isRedditShareLink(input)) return "reddit";
+  if (isPdfUrl(input)) return "pdf";
   return "article";
 }
 

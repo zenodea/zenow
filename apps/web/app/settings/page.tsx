@@ -1,22 +1,33 @@
 import { Header } from "@/components/header";
 import { requireTenant } from "@/lib/guard";
 import { getSettings } from "@/lib/settings";
+import { listTokens } from "@/lib/tokens";
 import { CredentialsForm } from "./credentials-form";
+import { TokensCard } from "./tokens-card";
 import { WorkerCard } from "./worker-card";
 
 export const dynamic = "force-dynamic";
 
 export default async function SettingsPage() {
   const { tenantId } = await requireTenant();
-  const settings = await getSettings(tenantId);
+  const [settings, tokens] = await Promise.all([getSettings(tenantId), listTokens(tenantId)]);
 
   return (
     <>
-      <Header narrow />
-      <main className="mx-auto max-w-2xl space-y-12 px-6 py-10">
+      <Header />
+      <main className="mx-auto max-w-5xl space-y-12 px-6 py-10">
         <section>
           <h1 className="mb-1 text-xl font-bold tracking-tight">Settings</h1>
           <p className="text-sm text-muted">Your feed is yours alone. Nobody else can see it.</p>
+        </section>
+
+        <section>
+          <h2 className="mb-1 text-base font-semibold">Extension tokens</h2>
+          <p className="mb-5 text-sm text-muted">
+            One per device or browser, so losing one means revoking one. A token carries your feed
+            and nothing else — it cannot read your keys or reach anyone else&apos;s items.
+          </p>
+          <TokensCard tokens={tokens} />
         </section>
 
         <section>

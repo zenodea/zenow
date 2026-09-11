@@ -83,7 +83,7 @@ async function complete(
   try {
     response = await openrouter(credentials.apiKey).chat.completions.create({
       model: credentials.model,
-      max_tokens: 4000,
+      max_tokens: 16000,
       messages,
       ...(jsonSchema
         ? {
@@ -131,7 +131,7 @@ async function condense(credentials: LlmCredentials, text: string, usage: Usage)
         {
           role: "system",
           content:
-            "Summarize this section of a longer document in under 200 words. Keep concrete facts, numbers, names and claims. Plain prose, no preamble.",
+            "Summarize this section of a longer document. Keep every concrete fact, number, name and claim -- this feeds a later pass, so anything dropped here is lost for good. Plain prose, no preamble.",
         },
         { role: "user", content: `Section ${index + 1} of ${chunks.length}:\n\n${chunk}` },
       ],

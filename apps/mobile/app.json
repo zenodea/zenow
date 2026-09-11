@@ -1,0 +1,59 @@
+{
+  "expo": {
+    "name": "Zenow",
+    "slug": "zenow",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "scheme": "zenow",
+    "userInterfaceStyle": "automatic",
+    "icon": "./assets/icon.png",
+    "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#faf9f7"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.zenodea.zenow",
+      "infoPlist": {
+        "UIBackgroundModes": ["audio"]
+      }
+    },
+    "android": {
+      "package": "com.zenodea.zenow",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#ef4056"
+      },
+      "edgeToEdgeEnabled": true,
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [{ "scheme": "zenow" }],
+          "category": ["BROWSABLE", "DEFAULT"]
+        }
+      ]
+    },
+    "plugins": [
+      "expo-router",
+      "expo-secure-store",
+      [
+        "expo-share-intent",
+        {
+          "iosActivationRules": { "NSExtensionActivationSupportsWebURLWithMaxCount": 1, "NSExtensionActivationSupportsText": true },
+          "androidIntentFilters": ["text/*"]
+        }
+      ],
+      [
+        "expo-splash-screen",
+        { "image": "./assets/splash-icon.png", "imageWidth": 160, "resizeMode": "contain", "backgroundColor": "#faf9f7" }
+      ]
+    ],
+    "experiments": { "typedRoutes": true },
+    "extra": {
+      "apiUrl": "https://news.zenodea.com"
+    }
+  }
+}

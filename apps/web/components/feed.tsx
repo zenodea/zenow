@@ -16,6 +16,10 @@ export function Feed({ initial }: { initial: ItemCard[] }) {
 
   const pendingKey = items.filter(isPending).map((item) => item.id).join(",");
 
+  const drop = useCallback((id: string) => {
+    setItems((current) => current.filter((item) => item.id !== id));
+  }, []);
+
   const merge = useCallback((incoming: ItemCard[]) => {
     setItems((current) => {
       const byId = new Map(current.map((item) => [item.id, item]));
@@ -51,7 +55,7 @@ export function Feed({ initial }: { initial: ItemCard[] }) {
       ) : (
         <div className="grid gap-x-6 gap-y-10 sm:grid-cols-2 lg:grid-cols-3">
           {items.map((item) => (
-            <ItemCardRow key={item.id} item={item} />
+            <ItemCardRow key={item.id} item={item} onArchived={drop} />
           ))}
         </div>
       )}

@@ -5,6 +5,7 @@ import {
   type WorkerJob,
   type WorkerSummarizeResult,
 } from "@zenow/shared";
+import { writeYoutubeCookies } from "./cookies.js";
 import { env } from "./env.js";
 import { errorMessage, log } from "./logger.js";
 import { waitForHost } from "./ratelimit.js";
@@ -34,6 +35,9 @@ async function claim(): Promise<WorkerJob | null> {
   return parsed.data.job;
 }
 
+// Written once at module load rather than per job.
+const cookiesPath = writeYoutubeCookies();
+
 async function runJob(job: WorkerJob): Promise<void> {
   try {
     if (job.kind === "fetch") {
@@ -43,6 +47,7 @@ async function runJob(job: WorkerJob): Promise<void> {
       const fetched = await fetchContent(url, {
         fetch,
         log,
+        ...(cookiesPath ? { youtubeCookiesPath: cookiesPath } : {}),
         ...(env.redditClientId && env.redditClientSecret
           ? { reddit: { clientId: env.redditClientId, clientSecret: env.redditClientSecret } }
           : {}),

@@ -1,0 +1,2 @@
+ALTER TABLE "items" ADD COLUMN "read_at" timestamp with time zone;--> statement-breakpoint
+CREATE INDEX "items_unread_idx" ON "items" USING btree ("tenant_id","created_at" DESC NULLS LAST) WHERE "items"."read_at" is null;

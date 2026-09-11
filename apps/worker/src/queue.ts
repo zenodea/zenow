@@ -72,14 +72,19 @@ export async function failJob(
   }
 
   const backoffMinutes = 2 ** job.attempts;
-  await sql`
-    update jobs
-       set locked_at = null,
-           locked_by = null,
-           last_error = ${message},
-           run_after = now() + make_interval(mins => ${backoffMinutes})
-     where id = ${job.id}
-  `;
+  await sql.begin(async (tx) => {
+    await tx`
+      update jobs
+         set locked_at = null,
+             locked_by = null,
+             last_error = ${message},
+             run_after = now() + make_interval(mins => ${backoffMinutes})
+       where id = ${job.id}
+    `;
+    // Also on the item, so the UI can say why it is still working rather than
+    // showing "Fetching" with no explanation for half an hour.
+    await tx`update items set error = ${message} where id = ${job.itemId}`;
+  });
   return "retrying";
 }
 
@@ -89,6 +94,35 @@ export async function sweepStaleLocks(sql: Sql, olderThanMinutes: number): Promi
     update jobs
        set locked_at = null, locked_by = null
      where locked_at < now() - make_interval(mins => ${olderThanMinutes})
+    returning id
+  `;
+  return rows.length;
+}
+
+/**
+ * An item in a working state with no job left is stranded: nothing will ever
+ * move it again. That should not happen, but a crash between enqueueing the
+ * next job and deleting the current one, or a job row removed by hand, both
+ * produce it -- and the item then says "Fetching" forever.
+ *
+ * The age guard keeps this clear of anything genuinely in flight.
+ */
+export async function requeueStrandedItems(sql: Sql, olderThanMinutes = 15): Promise<number> {
+  const rows = await sql`
+    insert into jobs (tenant_id, item_id, kind)
+    select i.tenant_id,
+           i.id,
+           case
+             when i.source_type = 'research' and c.item_id is null then 'research'::job_kind
+             when c.item_id is null then 'fetch'::job_kind
+             else 'summarize'::job_kind
+           end
+      from items i
+      left join jobs j on j.item_id = i.id
+      left join contents c on c.item_id = i.id
+     where i.status in ('queued', 'fetching', 'summarizing')
+       and j.id is null
+       and i.updated_at < now() - make_interval(mins => ${olderThanMinutes})
     returning id
   `;
   return rows.length;

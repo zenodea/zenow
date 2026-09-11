@@ -6,9 +6,31 @@ import { useState } from "react";
 const BUTTON =
   "rounded-full border border-line px-3 py-1.5 text-xs font-medium text-muted transition hover:border-ink hover:text-ink disabled:opacity-40";
 
-export function ItemActions({ id, url }: { id: string; url: string }) {
+export function ItemActions({
+  id,
+  url,
+  archived,
+}: {
+  id: string;
+  url: string | null;
+  archived: boolean;
+}) {
   const router = useRouter();
-  const [busy, setBusy] = useState<"retry" | "delete" | null>(null);
+  const [busy, setBusy] = useState<"retry" | "delete" | "archive" | null>(null);
+
+  async function toggleArchive() {
+    setBusy("archive");
+    await fetch(`/api/items/${id}/archive`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ archived: !archived }),
+    });
+    setBusy(null);
+    // Back to the list it just left, rather than a page that no longer belongs
+    // to the view you came from.
+    if (!archived) router.push("/");
+    router.refresh();
+  }
 
   async function retry() {
     setBusy("retry");
@@ -27,11 +49,16 @@ export function ItemActions({ id, url }: { id: string; url: string }) {
 
   return (
     <div className="flex gap-2">
-      <a href={url} target="_blank" rel="noreferrer noopener" className={BUTTON}>
-        Original
-      </a>
+      {url ? (
+        <a href={url} target="_blank" rel="noreferrer noopener" className={BUTTON}>
+          Original
+        </a>
+      ) : null}
       <button type="button" onClick={retry} disabled={busy !== null} className={BUTTON}>
-        {busy === "retry" ? "Queued" : "Re-read"}
+        {busy === "retry" ? "Queued" : url ? "Re-read" : "Re-run"}
+      </button>
+      <button type="button" onClick={toggleArchive} disabled={busy !== null} className={BUTTON}>
+        {archived ? "Restore" : "Archive"}
       </button>
       <button
         type="button"

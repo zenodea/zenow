@@ -2,12 +2,13 @@
 
 import { useActionState } from "react";
 import { saveCredentials, type ActionState } from "./actions";
+import { SecretField } from "./secret-field";
 import type { SettingsView } from "@/lib/settings";
 
 const MODELS = [
-  { slug: "anthropic/claude-haiku-4.5", label: "Claude Haiku 4.5 — best summaries ($1/$5 per Mtok)" },
+  { slug: "openai/gpt-5.6-luna", label: "GPT-5.6 Luna — default; best per pound ($0.20/$1.20 per Mtok)" },
   { slug: "google/gemini-2.5-flash-lite", label: "Gemini 2.5 Flash Lite — cheapest ($0.10/$0.40)" },
-  { slug: "openai/gpt-5-mini", label: "GPT-5 mini ($0.25/$2.00)" },
+  { slug: "anthropic/claude-haiku-4.5", label: "Claude Haiku 4.5 ($1/$5)" },
   { slug: "anthropic/claude-sonnet-4.5", label: "Claude Sonnet 4.5 — best quality ($3/$15)" },
 ];
 
@@ -28,16 +29,9 @@ export function CredentialsForm({ settings }: { settings: SettingsView }) {
           <a href="https://openrouter.ai/keys" target="_blank" rel="noreferrer" className="text-accent underline">
             Get a key
           </a>
-          . {settings.llmKeyHint ? `Currently set (${settings.llmKeyHint}).` : "Not set yet."}
+          .
         </p>
-        <input
-          id="llmKey"
-          name="llmKey"
-          type="password"
-          autoComplete="off"
-          placeholder={settings.llmKeyHint ? "Leave blank to keep the current key" : "sk-or-v1-…"}
-          className={FIELD}
-        />
+        <SecretField name="llmKey" hint={settings.llmKeyHint} placeholder="sk-or-v1-…" className={FIELD} />
       </div>
 
       <div>
@@ -58,15 +52,20 @@ export function CredentialsForm({ settings }: { settings: SettingsView }) {
           Fly app name
         </label>
         <p className="mb-2 text-xs text-muted">
-          Create it first — a deploy token can manage machines inside an app but cannot create the
-          app:
+          Zenow creates this app for you if your token is org-scoped. An{" "}
+          <strong className="font-semibold text-ink">app-scoped</strong> token is safer but can only
+          manage an app that already exists, so with one of those, run
           <code className="mx-1 rounded bg-surface px-1 py-0.5 text-[11px]">
             fly apps create zenow-worker-yourname
           </code>
+          first.
         </p>
         <input
           id="flyAppName"
           name="flyAppName"
+          autoCapitalize="none"
+          autoCorrect="off"
+          spellCheck={false}
           defaultValue={settings.flyAppName ?? ""}
           placeholder="zenow-worker-yourname"
           className={FIELD}
@@ -82,16 +81,13 @@ export function CredentialsForm({ settings }: { settings: SettingsView }) {
           <code className="mx-1 rounded bg-surface px-1 py-0.5 text-[11px]">
             fly tokens create deploy -a zenow-worker-yourname
           </code>
-          . Checked against your app when you save.{" "}
-          {settings.flyTokenHint ? `Currently set (${settings.flyTokenHint}).` : "Not set yet."}
+          . Checked against your app when you save.
         </p>
-        <textarea
-          id="flyToken"
+        <SecretField
           name="flyToken"
-          rows={3}
-          autoComplete="off"
-          spellCheck={false}
-          placeholder={settings.flyTokenHint ? "Leave blank to keep the current token" : "FlyV1 fm2_…"}
+          hint={settings.flyTokenHint}
+          placeholder="FlyV1 fm2_…"
+          multiline
           className={`${FIELD} font-mono text-[11px] break-all`}
         />
       </div>

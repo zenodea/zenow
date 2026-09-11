@@ -11,10 +11,15 @@ Add-on* → pick `manifest.json`. Temporary add-ons disappear on restart.
 
 ## Set it up
 
-1. Mint a token: `pnpm --filter @zenow/web token firefox`
-2. Open the extension's options and paste the API address and the token.
-   Saving asks for permission for that one host; the manifest requests no host
-   access up front.
+1. Sign in to [news.zenodea.com](https://news.zenodea.com), open `/settings` →
+   *Extension tokens* → **Create token**. It is shown once and stored as a
+   sha256, so a lost one is revoked and replaced rather than looked up.
+2. Open the extension's options and paste the token. The address is fixed at
+   `news.zenodea.com`; saving asks for permission for that one host, which the
+   manifest does not request up front.
+
+There is also `pnpm --filter @zenow/web token <tenant-id> [name]` for a shell,
+but it needs a database url and your tenant id, which the page does not.
 
 ## Use it
 

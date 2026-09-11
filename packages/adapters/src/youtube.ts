@@ -84,7 +84,7 @@ function collectImages(info: VideoInfo): RawImage[] {
   });
 }
 
-async function probe(videoId: string): Promise<VideoInfo> {
+async function probe(videoId: string, cookiesPath?: string): Promise<VideoInfo> {
   try {
     const { stdout } = await execa(
       "yt-dlp",
@@ -93,6 +93,8 @@ async function probe(videoId: string): Promise<VideoInfo> {
         "--skip-download",
         "--no-warnings",
         "--no-playlist",
+        // Cookies are what get a datacenter IP past the bot check.
+        ...(cookiesPath ? ["--cookies", cookiesPath] : []),
         `https://www.youtube.com/watch?v=${videoId}`,
       ],
       { timeout: YTDLP_TIMEOUT_MS, maxBuffer: MAX_JSON_BYTES },
@@ -107,7 +109,21 @@ async function probe(videoId: string): Promise<VideoInfo> {
         throw new AdapterError("timeout", "yt-dlp timed out", { cause: error });
       }
       const stderr = String(error.stderr ?? "");
-      const blocked = /Sign in to confirm|not a bot|429|rate.?limit/i.test(stderr);
+
+      // YouTube refuses datacenter IPs outright. Retrying from the same
+      // machine gets the same answer, so this fails once and says what would
+      // actually help rather than burning five attempts over half an hour.
+      if (/Sign in to confirm|not a bot/i.test(stderr)) {
+        throw new AdapterError(
+          "unsupported",
+          cookiesPath
+            ? "YouTube rejected this worker even with cookies. They have probably expired — export them again from a signed-in browser."
+            : "YouTube blocked this worker as a bot: it is refusing the server's IP address, and a retry will not change that. Set YOUTUBE_COOKIES on the worker, or run the worker somewhere with a residential connection.",
+          { cause: error },
+        );
+      }
+
+      const blocked = /429|rate.?limit/i.test(stderr);
       throw new AdapterError(blocked ? "blocked" : "http_error", `yt-dlp failed: ${stderr.split("\n")[0] || error.message}`, {
         cause: error,
       });
@@ -124,7 +140,7 @@ export const youtubeAdapter: Adapter = {
     const videoId = youtubeVideoId(url);
     if (!videoId) throw new AdapterError("unsupported", `No video id in ${url}`);
 
-    const info = await probe(videoId);
+    const info = await probe(videoId, ctx.youtubeCookiesPath);
     const description = info.description?.trim() ?? "";
     const captionUrl = pickCaptionUrl(info);
 

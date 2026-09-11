@@ -13,7 +13,7 @@ if (!url) {
 }
 if (!/^[0-9a-f-]{36}$/i.test(tenantId ?? "")) {
   console.error("usage: pnpm --filter @zenow/web token <tenant-id> [name]");
-  console.error("the tenant id is your workspace's organization id, shown on /settings");
+  console.error("your tenant id is your user id; /settings mints tokens without one");
   process.exit(1);
 }
 

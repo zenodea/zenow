@@ -1,5 +1,6 @@
 import { fetchContent } from "@zenow/adapters";
 import { and, contents, eq, items, type Database, type Sql } from "@zenow/db";
+import { writeYoutubeCookies } from "../cookies.js";
 import { env } from "../env.js";
 import { log } from "../logger.js";
 import { enqueue } from "../queue.js";
@@ -25,9 +26,11 @@ export async function runFetchJob(db: Database, sql: Sql, tenantId: string, item
   const url = new URL(item.url);
   await waitForHost(url.host);
 
+  const cookiesPath = writeYoutubeCookies();
   const fetched = await fetchContent(url, {
     fetch,
     log,
+    ...(cookiesPath ? { youtubeCookiesPath: cookiesPath } : {}),
     ...(env.redditClientId && env.redditClientSecret
       ? { reddit: { clientId: env.redditClientId, clientSecret: env.redditClientSecret } }
       : {}),
@@ -48,7 +51,15 @@ export async function runFetchJob(db: Database, sql: Sql, tenantId: string, item
 
   await db
     .update(items)
-    .set({ title: fetched.title, status: "summarizing", updatedAt: new Date() })
+    .set({
+      title: fetched.title,
+      status: "summarizing",
+      // A url that looked like an article and served a pdf is a pdf.
+      ...(fetched.sourceType && fetched.sourceType !== item.sourceType
+        ? { sourceType: fetched.sourceType }
+        : {}),
+      updatedAt: new Date(),
+    })
     .where(eq(items.id, item.id));
 
   await enqueue(sql, tenantId, item.id, "summarize");

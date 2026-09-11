@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 import { apiTokens, eq } from "@zenow/db";
-import { auth } from "./auth/server";
+import { getSession } from "./auth/server";
 import { db } from "./db";
 
 export type Principal =
@@ -31,7 +31,7 @@ export async function authenticate(request: Request): Promise<Principal | null> 
     return { kind: "token", name: token.name, tenantId: token.tenantId };
   }
 
-  const { data: session } = await auth.getSession();
+  const { data: session } = await getSession();
   if (!session?.user) return null;
 
   // The user is the tenant. This used to read activeOrganizationId, which is

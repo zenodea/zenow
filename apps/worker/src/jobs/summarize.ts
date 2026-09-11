@@ -13,7 +13,8 @@ import {
 import { normalizeTags } from "@zenow/shared";
 import { log } from "../logger.js";
 import { env } from "../env.js";
-import { SummarizerError, summarize, type LlmCredentials } from "../summarize/index.js";
+import { summarize } from "../summarize/index.js";
+import { credentialsFor } from "./credentials.js";
 
 const VOCABULARY_SIZE = 40;
 
@@ -26,26 +27,6 @@ async function knownTags(db: Database, tenantId: string): Promise<{ tag: string;
     .groupBy(sql`tag`)
     .orderBy(desc(sql`count(*)`), sql`tag`)
     .limit(VOCABULARY_SIZE);
-}
-
-/**
- * Each workspace pays for its own summaries. A worker running on a tenant's own
- * Fly account carries their key in its environment; the shared worker looks it
- * up and decrypts it per job.
- */
-async function credentialsFor(db: Database, tenantId: string): Promise<LlmCredentials> {
-  if (env.openrouterApiKey) return { apiKey: env.openrouterApiKey, model: env.model };
-
-  const [row] = await db
-    .select({ encrypted: tenantSettings.llmKeyEncrypted, model: tenantSettings.llmModel })
-    .from(tenantSettings)
-    .where(eq(tenantSettings.tenantId, tenantId))
-    .limit(1);
-
-  if (!row?.encrypted) {
-    throw new SummarizerError("No OpenRouter key set for this workspace. Add one in Settings.", false);
-  }
-  return { apiKey: decryptSecret(row.encrypted), model: row.model };
 }
 
 export async function runSummarizeJob(db: Database, tenantId: string, itemId: string): Promise<void> {

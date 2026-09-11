@@ -3,7 +3,12 @@ import { notFound } from "next/navigation";
 import { z } from "zod";
 import Markdown from "react-markdown";
 import { Header } from "@/components/header";
+import { LiveItem } from "@/components/live-item";
+import { SourceBadge } from "@/components/item-card";
+import { MarkRead } from "@/components/mark-read";
+import { PageTransition } from "@/components/page-transition";
 import { ItemActions } from "@/components/item-actions";
+import { Listen } from "@/components/listen";
 import { OriginalContent } from "@/components/original-content";
 import { StatusPill } from "@/components/status-pill";
 import { TagChip } from "@/components/tag-chip";
@@ -36,6 +41,7 @@ function byline(item: Item): string[] {
     }
   }
 
+  if (typeof meta.pages === "number") parts.push(`${meta.pages} pages`);
   if (item.read_time_min) parts.push(`${item.read_time_min} min read`);
   return parts;
 }
@@ -55,18 +61,28 @@ export default async function ItemPage({ params }: { params: Promise<{ id: strin
 
   return (
     <>
-      <Header narrow />
-      <main className="mx-auto max-w-2xl px-6 pt-8 pb-24">
+      <Header />
+      <MarkRead id={item.id} alreadyRead={item.read} />
+      <LiveItem id={item.id} status={item.status} />
+      <PageTransition>
+      <main className="mx-auto max-w-5xl px-6 pt-8 pb-24">
         <div className="mb-6 flex items-center justify-between gap-4">
-          <Link href="/" className="shrink-0 text-sm text-muted hover:text-ink">
+          <Link href="/" transitionTypes={["nav-out"]} className="shrink-0 text-sm text-muted hover:text-ink">
             ← My list
           </Link>
-          <ItemActions id={item.id} url={item.url} />
+          <ItemActions
+            id={item.id}
+            url={item.url.startsWith("zenow:") ? null : item.url}
+            archived={item.archived}
+          />
         </div>
 
-        <p className="mb-3 text-[11px] tracking-[0.12em] text-muted uppercase">
-          {byline(item).join("  ·  ")}
-        </p>
+        <div className="mb-3 flex items-center gap-3">
+          <p className="text-[11px] tracking-[0.12em] text-muted uppercase">
+            {byline(item).join("  ·  ")}
+          </p>
+          <SourceBadge type={item.source_type} />
+        </div>
 
         <h1 className="mb-5 text-3xl leading-[1.2] font-bold tracking-tight text-balance sm:text-4xl">
           {item.title ?? item.url}
@@ -87,8 +103,12 @@ export default async function ItemPage({ params }: { params: Promise<{ id: strin
         )}
 
         {item.error ? (
-          <p className="mb-8 rounded-xl border border-line bg-accent-soft px-4 py-3 text-sm text-accent">
-            {item.error}
+          <p
+            className={`mb-8 rounded-xl border border-line px-4 py-3 text-sm ${
+              item.status === "failed" ? "bg-accent-soft text-accent" : "bg-surface text-muted"
+            }`}
+          >
+            {item.status === "failed" ? item.error : `Still trying — ${item.error}`}
           </p>
         ) : null}
 
@@ -101,6 +121,11 @@ export default async function ItemPage({ params }: { params: Promise<{ id: strin
 
         {item.summary ? (
           <>
+            <Listen
+              title={item.title ?? "This item"}
+              summaryMd={[...item.summary.key_points, item.summary.summary_md].join("\n\n")}
+            />
+
             {item.summary.key_points.length > 0 ? (
               <ul className="mb-8 space-y-2.5 rounded-xl border border-line bg-surface px-5 py-4">
                 {item.summary.key_points.map((point) => (
@@ -141,12 +166,17 @@ export default async function ItemPage({ params }: { params: Promise<{ id: strin
           </>
         ) : (
           <p className="text-sm text-muted">
-            {item.status === "failed" ? "No summary was produced." : "Reading it now..."}
+            {item.status === "failed"
+              ? "No summary was produced."
+              : item.source_type === "research"
+                ? "Researching. Searching the web and reading sources — this takes a minute or two."
+                : "Reading it now..."}
           </p>
         )}
 
         {item.content ? <OriginalContent html={item.content.html} text={item.content.text} /> : null}
       </main>
+      </PageTransition>
     </>
   );
 }

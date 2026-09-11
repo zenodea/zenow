@@ -13,7 +13,7 @@ export type SettingsView = {
 
 const DEFAULTS: SettingsView = {
   llmKeyHint: null,
-  llmModel: "anthropic/claude-haiku-4.5",
+  llmModel: "openai/gpt-5.6-luna",
   flyTokenHint: null,
   flyAppName: null,
   workerStatus: "none",

@@ -44,6 +44,10 @@ export async function claimForTenant(tenantId: string): Promise<WorkerJob | null
      where id = (
        select id from jobs
         where tenant_id = ${tenantId}
+          -- Research is not in the remote protocol yet, so a tenant's own
+          -- worker must not claim one: it would be handed to the summarize
+          -- path and fail for want of content. The shared worker takes them.
+          and kind <> 'research'
           and locked_at is null
           and run_after <= now()
         order by created_at
@@ -64,6 +68,8 @@ export async function claimForTenant(tenantId: string): Promise<WorkerJob | null
     .limit(1);
 
   if (!item) {
+    // The item really is gone (deleted while queued); the job has nothing to
+    // act on, so dropping it is correct here.
     await database.delete(jobs).where(eq(jobs.id, jobId));
     return null;
   }
@@ -78,7 +84,20 @@ export async function claimForTenant(tenantId: string): Promise<WorkerJob | null
 
   const [content] = await database.select().from(contents).where(eq(contents.itemId, item.id)).limit(1);
   if (!content) {
-    await database.delete(jobs).where(eq(jobs.id, jobId));
+    // Deleting the job here stranded the item: no job left, so nothing would
+    // ever move it again, and it sat on "queued" forever with no explanation.
+    // Fail it properly instead, so it says so and can be retried.
+    await database.transaction(async (tx) => {
+      await tx.delete(jobs).where(eq(jobs.id, jobId));
+      await tx
+        .update(items)
+        .set({
+          status: "failed",
+          error: "Nothing was fetched for this item, so there was nothing to summarise.",
+          updatedAt: new Date(),
+        })
+        .where(and(eq(items.tenantId, tenantId), eq(items.id, item.id)));
+    });
     return null;
   }
 

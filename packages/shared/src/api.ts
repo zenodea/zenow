@@ -4,7 +4,7 @@ import { sourceTypes } from "./url.js";
 export const itemStatuses = ["queued", "fetching", "summarizing", "done", "failed"] as const;
 export type ItemStatus = (typeof itemStatuses)[number];
 
-export const jobKinds = ["fetch", "summarize"] as const;
+export const jobKinds = ["fetch", "summarize", "research"] as const;
 export type JobKind = (typeof jobKinds)[number];
 
 export const savedFromValues = ["extension", "web", "tui", "subscription"] as const;
@@ -36,6 +36,20 @@ export const summaryResultSchema = z.object({
 });
 export type SummaryResult = z.infer<typeof summaryResultSchema>;
 
+/** A digest has no images to pick from, and writes its own headline. */
+export const digestResultSchema = z.object({
+  title: z.string().min(1),
+  summary_md: z.string().min(1),
+  key_points: z.array(z.string().min(1)).min(1).max(8),
+  tags: z.array(z.string().min(1)).max(5),
+});
+export type DigestResult = z.infer<typeof digestResultSchema>;
+
+export const researchRequestSchema = z.object({
+  prompt: z.string().trim().min(10).max(4000),
+});
+export type ResearchRequest = z.infer<typeof researchRequestSchema>;
+
 export const saveItemRequestSchema = z.object({
   url: z.string().trim().min(1).max(4096),
   saved_from: z.enum(savedFromValues).default("web"),
@@ -44,6 +58,10 @@ export type SaveItemRequest = z.input<typeof saveItemRequestSchema>;
 
 export const listItemsQuerySchema = z.object({
   status: z.enum(itemStatuses).optional(),
+  /** "unread" is not a status: it is whether you have opened it. */
+  unread: z.stringbool().optional(),
+  /** Absent means the live feed; true means the archive. Never both. */
+  archived: z.stringbool().optional(),
   q: z.string().trim().min(1).max(200).optional(),
   tag: z.string().trim().min(1).max(64).optional(),
   cursor: z.string().optional(),
@@ -67,6 +85,8 @@ export const itemCardSchema = z.object({
   lead: z.string().nullable(),
   thumbnail: z.string().nullable(),
   tags: z.array(z.string()),
+  read: z.boolean(),
+  archived: z.boolean(),
 });
 export type ItemCard = z.infer<typeof itemCardSchema>;
 
@@ -96,6 +116,9 @@ export const itemDetailSchema = itemCardSchema.extend({
     .nullable(),
 });
 export type ItemDetail = z.infer<typeof itemDetailSchema>;
+
+export const archiveRequestSchema = z.object({ archived: z.boolean() });
+export type ArchiveRequest = z.infer<typeof archiveRequestSchema>;
 
 export const saveItemResponseSchema = z.object({
   id: z.uuid(),

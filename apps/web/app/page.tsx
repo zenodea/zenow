@@ -2,6 +2,7 @@ import { Suspense } from "react";
 import { listItemsQuerySchema } from "@zenow/shared";
 import { Feed } from "@/components/feed";
 import { Header } from "@/components/header";
+import { PageTransition } from "@/components/page-transition";
 import { ListControls } from "@/components/list-controls";
 import { TagChip } from "@/components/tag-chip";
 import { requireTenant } from "@/lib/guard";
@@ -26,7 +27,8 @@ export default async function HomePage({
     <>
       <Header />
 
-      <main className="mx-auto max-w-6xl px-6 py-10">
+      <PageTransition>
+      <main className="mx-auto max-w-5xl px-6 py-10">
         <Suspense fallback={null}>
           <ListControls />
         </Suspense>
@@ -40,8 +42,9 @@ export default async function HomePage({
         ) : null}
 
         {/* Remount on filter change so the feed does not merge two result sets. */}
-        <Feed key={`${query.status ?? ""}:${query.q ?? ""}:${query.tag ?? ""}`} initial={items} />
+        <Feed key={`${query.status ?? ""}:${query.q ?? ""}:${query.tag ?? ""}:${query.unread ?? ""}`} initial={items} />
       </main>
+      </PageTransition>
     </>
   );
 }

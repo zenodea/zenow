@@ -25,10 +25,13 @@ export const env = {
   staleLockMinutes: Number(process.env.STALE_LOCK_MINUTES ?? 10),
 
   openrouterApiKey: optional("OPENROUTER_API_KEY"),
-  model: process.env.LLM_MODEL ?? "anthropic/claude-haiku-4.5",
+  model: process.env.LLM_MODEL ?? "openai/gpt-5.6-luna",
 
   redditClientId: optional("REDDIT_CLIENT_ID"),
   redditClientSecret: optional("REDDIT_CLIENT_SECRET"),
+
+  /** Netscape cookies.txt contents. Without it YouTube refuses cloud IPs. */
+  youtubeCookies: optional("YOUTUBE_COOKIES"),
 
   get mode(): "remote" | "local" {
     return this.apiUrl && this.workerToken ? "remote" : "local";

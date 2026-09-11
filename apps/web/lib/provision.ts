@@ -1,7 +1,7 @@
 import { randomBytes } from "node:crypto";
 import { eq, tenantSettings } from "@zenow/db";
 import { db } from "./db";
-import { createMachine, destroyMachine, FlyError, listMachines, waitForStarted } from "./fly";
+import { createApp, createMachine, destroyMachine, FlyError, listMachines, waitForStarted } from "./fly";
 import { getFlyToken, getLlmKey } from "./settings";
 import { hashWorkerToken } from "./worker-auth";
 
@@ -68,8 +68,24 @@ export async function provisionWorker(tenantId: string, appName: string): Promis
     });
 
   try {
+    // The app is normally made when the token is saved, but it can be deleted
+    // between then and now.
+    let existing: Awaited<ReturnType<typeof listMachines>>;
+    try {
+      existing = await listMachines(flyToken, appName);
+    } catch (error) {
+      if (!(error instanceof FlyError) || error.status !== 404) throw error;
+      if ((await createApp(flyToken, appName, process.env.FLY_ORG_SLUG ?? "personal")) === "forbidden") {
+        throw new Error(
+          `Fly has no app called "${appName}" and this token cannot create one. ` +
+            `Run: fly apps create ${appName}`,
+        );
+      }
+      existing = [];
+    }
+
     // Replace rather than accumulate: one worker per workspace.
-    for (const machine of await listMachines(flyToken, appName)) {
+    for (const machine of existing) {
       if (machine.name === MACHINE_NAME) await destroyMachine(flyToken, appName, machine.id);
     }
 
@@ -94,12 +110,7 @@ export async function provisionWorker(tenantId: string, appName: string): Promis
     await setStatus(tenantId, "running", { flyMachineId: machine.id });
     return { machineId: machine.id };
   } catch (error) {
-    const message =
-      error instanceof FlyError && error.status === 404
-        ? `Fly has no app called "${appName}", or your token cannot see it. Create it with: fly apps create ${appName}`
-        : error instanceof Error
-          ? error.message
-          : "Provisioning failed";
+    const message = error instanceof Error ? error.message : "Provisioning failed";
 
     await setStatus(tenantId, "error", { workerError: message });
     throw new Error(message);

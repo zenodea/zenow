@@ -1,6 +1,7 @@
 import { Readability } from "@mozilla/readability";
 import { parseHTML } from "linkedom";
-import { expectHtml, fetchPage } from "./http.js";
+import { expectHtml, fetchPage, isPdf } from "./http.js";
+import { extractPdf } from "./pdf.js";
 import { absoluteUrl, imagesFromElement, indexImages, isLikelyContentImage, type RawImage } from "./images.js";
 import { AdapterError, type Adapter, type Fetched } from "./types.js";
 
@@ -113,6 +114,11 @@ export const articleAdapter: Adapter = {
   match: () => true,
   async fetch(url, ctx) {
     const page = await fetchPage(url, ctx);
+
+    // Plenty of pdfs sit behind urls that give no sign of it -- /download,
+    // /view/1234 -- so what came back decides, not what was asked for.
+    if (isPdf(page.contentType)) return extractPdf(page.bytes, new URL(page.finalUrl));
+
     expectHtml(page, url);
     return extractArticle(page.body, new URL(page.finalUrl));
   },
