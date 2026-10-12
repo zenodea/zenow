@@ -1,0 +1,261 @@
+<!doctype html>
+<html lang="en" data-theme="base">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Zenow — Save a link. Get the substance back.</title>
+  <meta name="description" content="Zenow reads the page for you, writes a short summary with the key points, keeps the pictures worth keeping and tags it. Articles, Reddit threads, YouTube videos and PDFs.">
+  <meta name="theme-color" content="#fbfaf8" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#151517" media="(prefers-color-scheme: dark)">
+  <meta property="og:title" content="Zenow">
+  <meta property="og:description" content="Save a link. Get the substance back.">
+  <meta property="og:type" content="website">
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="styles.css">
+  <!-- Before first paint, so a theme picked on an earlier visit does not flash in. -->
+  <script>try{var t=localStorage.getItem("zenow.landing.theme");if(t)document.documentElement.dataset.theme=t}catch(_){}</script>
+</head>
+<body>
+  <header class="nav wrap">
+    <a href="./" class="wordmark" aria-label="Zenow">
+      <span class="mark"><svg viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="16" class="enso"/></svg></span>
+      <span>Zenow<span class="dot">.</span></span>
+    </a>
+    <nav>
+      <a href="https://github.com/zenodea/zenow" class="nav-link hide-sm">GitHub</a>
+      <a href="https://news.zenodea.com/auth/sign-up" class="btn btn-ink btn-sm">Get started</a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="hero wrap">
+      <div class="hero-copy rise">
+        <p class="pill"><span class="bullet"></span>Articles, Reddit threads, YouTube videos and PDFs</p>
+        <h1>Save a link.<br>Get the substance back<span class="dot">.</span></h1>
+        <p class="lead">
+          Zenow reads the page for you, writes a short summary with the key points, keeps the pictures
+          worth keeping and tags it. Your list opens on what you have not read yet.
+        </p>
+        <div class="actions">
+          <a href="https://news.zenodea.com/auth/sign-up" class="btn btn-accent">Start your list</a>
+          <a href="https://news.zenodea.com/auth/sign-in" class="btn btn-ghost">I have an account</a>
+        </div>
+        <p class="fine">Bring your own OpenRouter key · Open source under MIT</p>
+      </div>
+
+      <!-- A still of the app: the list behind, an article open on its summary in front. -->
+      <div class="preview" aria-hidden="true">
+        <div class="glow"></div>
+
+        <div class="card list-card">
+          <div class="tabs">
+            <span class="on">Unread</span><span>All</span><span>Archive</span>
+          </div>
+          <ul>
+            <li><span class="thumb"></span><span><span class="meta"><i></i>YouTube · 24 min</span><b>How bridges are tested before they open</b></span></li>
+            <li><span class="thumb"></span><span><span class="meta"><i></i>Reddit</span><b>What took you years to appreciate?</b></span></li>
+            <li><span class="thumb"></span><span><span class="meta"><i></i>Report <em>PDF</em></span><b>Urban cycling, a ten year review</b></span></li>
+            <li><span class="thumb"></span><span><span class="meta"><i></i>Zenow <em>Week</em></span><b>Your week: mostly bridges, a little bread</b></span></li>
+          </ul>
+        </div>
+
+        <article class="card read-card">
+          <div class="read-top">
+            <span class="meta">Article · 11 min</span>
+            <span class="chip-outline">
+              <svg viewBox="0 0 24 24" class="icon-xs"><path d="M3 18v-6a9 9 0 0 1 18 0v6"/><path d="M21 19a2 2 0 0 1-2 2h-1v-6h3zM3 19a2 2 0 0 0 2 2h1v-6H3z"/></svg>
+              Listen
+            </span>
+          </div>
+          <h3>The case for reading less, but better</h3>
+          <div class="switch"><span class="on">Summary</span><span>Original</span></div>
+          <p class="label">Key points</p>
+          <ul class="points">
+            <li>Most saved articles are never opened. The backlog turns into guilt, not knowledge.</li>
+            <li>A short summary is enough to decide whether something deserves your evening.</li>
+          </ul>
+          <p class="serif muted">
+            A reading list works better as a filter than an archive. The summary tells you whether a piece
+            is worth the full read; the few that are, you read properly.
+          </p>
+          <div class="tags"><span>reading</span><span>habits</span></div>
+        </article>
+      </div>
+    </section>
+
+    <section class="section wrap">
+      <p class="eyebrow">How it goes</p>
+      <h2>Three steps, and two of them are yours.</h2>
+      <ol class="grid-3">
+        <li class="card step">
+          <span class="num">1</span>
+          <h3>Save it</h3>
+          <p>From the Firefox extension, your phone's share sheet, or by pasting a link. It takes a second and you can carry on.</p>
+        </li>
+        <li class="card step">
+          <span class="num">2</span>
+          <h3>Zenow reads it</h3>
+          <p>It fetches the page, writes the key points and a few paragraphs, picks the pictures worth keeping and tags it.</p>
+        </li>
+        <li class="card step">
+          <span class="num">3</span>
+          <h3>You read the substance</h3>
+          <p>Every article opens on its summary. One tap switches to the original, cleaned up and in the same reading font.</p>
+        </li>
+      </ol>
+    </section>
+
+    <section class="section wrap">
+      <p class="eyebrow">Your list</p>
+      <h2>A reading list that reads first.</h2>
+      <div class="features">
+        <div class="feature">
+          <span class="icon-box"><svg viewBox="0 0 24 24"><path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.5 5h13L22 12v6a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-6z"/></svg></span>
+          <h3>Unread comes first</h3>
+          <p>Unread, All and Archive sit at the top. The list opens on what you have not read yet, and on everything once that is empty.</p>
+        </div>
+        <div class="feature">
+          <span class="icon-box"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg></span>
+          <h3>Search the full text</h3>
+          <p>Titles, summaries and the whole article are searchable, so the thing you half remember is still findable.</p>
+        </div>
+        <div class="feature">
+          <span class="icon-box"><svg viewBox="0 0 24 24"><path d="M20.6 13.4 13.4 20.6a2 2 0 0 1-2.8 0L3 13V3h10l7.6 7.6a2 2 0 0 1 0 2.8z"/><circle cx="7.5" cy="7.5" r="1.2"/></svg></span>
+          <h3>Tags that stay tidy</h3>
+          <p>Tags are added for you and reuse the ones you already have, instead of inventing a new one every time.</p>
+        </div>
+        <div class="feature">
+          <span class="icon-box"><svg viewBox="0 0 24 24"><path d="M3 18v-6a9 9 0 0 1 18 0v6"/><path d="M21 19a2 2 0 0 1-2 2h-1v-6h3zM3 19a2 2 0 0 0 2 2h1v-6H3z"/></svg></span>
+          <h3>Listen instead</h3>
+          <p>Any summary can be read aloud, using the voice your device already has.</p>
+        </div>
+        <div class="feature">
+          <span class="icon-box"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></span>
+          <h3>A weekly digest</h3>
+          <p>Once a week Zenow writes up what you saved: what the week was about, and whether it was about anything at all.</p>
+        </div>
+        <div class="feature">
+          <span class="icon-box"><svg viewBox="0 0 24 24"><path d="M2 4h6a4 4 0 0 1 4 4v13a3 3 0 0 0-3-3H2z"/><path d="M22 4h-6a4 4 0 0 0-4 4v13a3 3 0 0 1 3-3h7z"/></svg></span>
+          <h3>Summary or original</h3>
+          <p>Articles open on the summary. If you would rather start on the original, change it once in your settings.</p>
+        </div>
+        <div class="feature">
+          <span class="icon-box"><svg viewBox="0 0 24 24"><rect x="6" y="2" width="12" height="20" rx="2.5"/><path d="M11 18h2"/></svg></span>
+          <h3>Installs on your phone</h3>
+          <p>The web app installs like an app, and pages you have opened stay readable without a connection.</p>
+        </div>
+        <div class="feature">
+          <span class="icon-box"><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg></span>
+          <h3>Fails gently</h3>
+          <p>If a summary cannot be made, the article opens on the original instead, with a small note saying why.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="section wrap">
+      <p class="eyebrow">Saving</p>
+      <h2>Wherever the link turns up.</h2>
+      <div class="grid-2">
+        <div class="card way">
+          <span class="bullet"></span>
+          <div>
+            <h3>Firefox extension</h3>
+            <p>A toolbar button, <kbd>Ctrl</kbd> <kbd>Shift</kbd> <kbd>U</kbd>, or right click any link.
+              <a href="https://github.com/zenodea/zenow/releases?q=ext-v">Download it</a>.</p>
+          </div>
+        </div>
+        <div class="card way">
+          <span class="bullet"></span>
+          <div>
+            <h3>Android</h3>
+            <p>Install the site, then Share → Zenow from any app.</p>
+          </div>
+        </div>
+        <div class="card way">
+          <span class="bullet"></span>
+          <div>
+            <h3>Paste</h3>
+            <p>The + button on your list takes any link.</p>
+          </div>
+        </div>
+        <div class="card way">
+          <span class="bullet"></span>
+          <div>
+            <h3>Research</h3>
+            <p>Ask a question instead of pasting a link, and Zenow searches the web and writes up what it found.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section wrap">
+      <p class="eyebrow">Themes</p>
+      <h2>Four themes, light and dark.</h2>
+      <p class="sub">Saved to your account, so every device agrees. Pick one to see this page in it.</p>
+      <div class="themes" role="group" aria-label="Preview a theme">
+        <button type="button" class="theme" data-pick="base" aria-pressed="true">
+          <span class="halves"><span style="--p:#151517;--i:#ececef;--a:#ff6076"></span><span style="--p:#fbfaf8;--i:#1a1a1a;--a:#ef4056"></span></span>
+          <span class="theme-name"><b>Base</b><small>Zenow's own</small></span>
+        </button>
+        <button type="button" class="theme" data-pick="catppuccin" aria-pressed="false">
+          <span class="halves"><span style="--p:#181825;--i:#cdd6f4;--a:#cba6f7"></span><span style="--p:#e6e9ef;--i:#4c4f69;--a:#8839ef"></span></span>
+          <span class="theme-name"><b>Catppuccin</b><small>Latte and Mocha</small></span>
+        </button>
+        <button type="button" class="theme" data-pick="gruvbox" aria-pressed="false">
+          <span class="halves"><span style="--p:#1d2021;--i:#ebdbb2;--a:#fe8019"></span><span style="--p:#fbf1c7;--i:#3c3836;--a:#af3a03"></span></span>
+          <span class="theme-name"><b>Gruvbox</b><small>light and dark</small></span>
+        </button>
+        <button type="button" class="theme" data-pick="everforest" aria-pressed="false">
+          <span class="halves"><span style="--p:#2d353b;--i:#d3c6aa;--a:#a7c080"></span><span style="--p:#f4f0d9;--i:#5c6a72;--a:#8da101"></span></span>
+          <span class="theme-name"><b>Everforest</b><small>light and dark</small></span>
+        </button>
+      </div>
+    </section>
+
+    <section class="section wrap">
+      <p class="eyebrow">Your keys</p>
+      <h2>You pay for your own summaries, and pick the model.</h2>
+      <div class="grid-3">
+        <div class="card plain">
+          <h3>OpenRouter key</h3>
+          <p>Each account brings its own <a href="https://openrouter.ai">OpenRouter</a> key. No subscription in the middle, and any model it offers.</p>
+        </div>
+        <div class="card plain">
+          <h3>Your own worker</h3>
+          <p>Give Zenow a Fly.io token and it runs a worker just for you, which sleeps when there is nothing to do.</p>
+        </div>
+        <div class="card plain">
+          <h3>Open source</h3>
+          <p>MIT licensed. Read the code, run it yourself, or send a fix on <a href="https://github.com/zenodea/zenow">GitHub</a>.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="wrap closing-wrap">
+      <div class="closing">
+        <div class="closing-glow"></div>
+        <svg viewBox="0 0 64 64" class="closing-enso" aria-hidden="true"><circle cx="32" cy="32" r="16" class="enso"/></svg>
+        <h2>Stop collecting. Start reading<span class="dot">.</span></h2>
+        <p>Save your first link and see what it was actually about.</p>
+        <a href="https://news.zenodea.com/auth/sign-up" class="btn btn-accent">Start your list</a>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="wrap footer-row">
+      <a href="./" class="wordmark small" aria-label="Zenow">
+        <span class="mark"><svg viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="16" class="enso"/></svg></span>
+        <span>Zenow<span class="dot">.</span></span>
+      </a>
+      <div class="footer-links">
+        <a href="https://github.com/zenodea/zenow">GitHub</a>
+        <a href="https://github.com/zenodea/zenow/blob/main/LICENSE">MIT license</a>
+        <a href="https://news.zenodea.com/auth/sign-in">Sign in</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="themes.js"></script>
+</body>
+</html>

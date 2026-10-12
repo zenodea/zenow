@@ -86,6 +86,7 @@ pnpm dev:worker
 | `apps/worker`       | Fetches and summarises. Runs on Fly.io.           |
 | `apps/extension`    | Firefox extension. No build step.                 |
 | `apps/mobile`       | Expo app for iOS and Android.                     |
+| `apps/landing`      | Landing page. Static, on GitHub Pages.            |
 | `packages/shared`   | The API contract, shared by every client.         |
 | `packages/db`       | Drizzle schema and migrations.                    |
 | `packages/adapters` | Article, Reddit, YouTube and PDF extraction.      |
